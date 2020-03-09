@@ -5,27 +5,21 @@
 use allegro::Core;
 use allegro_audio_sys::*;
 
-pub struct AudioAddon
-{
+pub struct AudioAddon {
 	_dummy: (),
 }
 
-impl AudioAddon
-{
-	pub fn init(_: &Core) -> Result<AudioAddon, String>
-	{
+impl AudioAddon {
+	pub fn init(_: &Core) -> Result<AudioAddon, String> {
 		use std::sync::Once;
 		static mut RUN_ONCE: Once = Once::new();
 
 		let mut res = Err("The audio addon already initialized.".into());
 		unsafe {
 			RUN_ONCE.call_once(|| {
-				res = if al_install_audio() != 0
-				{
+				res = if al_install_audio() != 0 {
 					Ok(AudioAddon { _dummy: () })
-				}
-				else
-				{
+				} else {
 					Err("Could not initialize the audio addon.".into())
 				}
 			})
@@ -33,8 +27,7 @@ impl AudioAddon
 		res
 	}
 
-	pub fn get_version() -> i32
-	{
+	pub fn get_version() -> i32 {
 		unsafe { al_get_allegro_audio_version() as i32 }
 	}
 }

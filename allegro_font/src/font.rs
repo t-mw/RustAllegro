@@ -12,19 +12,15 @@ use std::ffi::CString;
 use std::mem;
 
 #[derive(Copy, Clone)]
-pub enum FontAlign
-{
+pub enum FontAlign {
 	Left,
 	Centre,
 	Right,
 }
 
-impl FontAlign
-{
-	fn get_allegro_flags(&self) -> c_int
-	{
-		match *self
-		{
+impl FontAlign {
+	fn get_allegro_flags(&self) -> c_int {
+		match *self {
 			FontAlign::Left => ALLEGRO_ALIGN_LEFT,
 			FontAlign::Right => ALLEGRO_ALIGN_RIGHT,
 			FontAlign::Centre => ALLEGRO_ALIGN_CENTRE,
@@ -32,8 +28,7 @@ impl FontAlign
 	}
 }
 
-pub trait FontDrawing
-{
+pub trait FontDrawing {
 	fn draw_text(&self, font: &Font, color: Color, x: f32, y: f32, align: FontAlign, text: &str);
 	fn draw_justified_text(
 		&self, font: &Font, color: Color, x1: f32, x2: f32, y: f32, diff: f32, align: FontAlign,
@@ -41,26 +36,21 @@ pub trait FontDrawing
 	);
 }
 
-fn check_valid_target_bitmap()
-{
+fn check_valid_target_bitmap() {
 	unsafe {
-		if al_get_target_bitmap().is_null()
-		{
+		if al_get_target_bitmap().is_null() {
 			panic!("Target bitmap is null!");
 		}
 	}
 }
 
-impl FontDrawing for Core
-{
+impl FontDrawing for Core {
 	fn draw_justified_text(
 		&self, font: &Font, color: Color, x1: f32, x2: f32, y: f32, diff: f32, align: FontAlign,
 		text: &str,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
-		if text.len() == 0
-		{
+		if text.len() == 0 {
 			return;
 		}
 		unsafe {
@@ -84,11 +74,9 @@ impl FontDrawing for Core
 		}
 	}
 
-	fn draw_text(&self, font: &Font, color: Color, x: f32, y: f32, align: FontAlign, text: &str)
-	{
+	fn draw_text(&self, font: &Font, color: Color, x: f32, y: f32, align: FontAlign, text: &str) {
 		check_valid_target_bitmap();
-		if text.len() == 0
-		{
+		if text.len() == 0 {
 			return;
 		}
 		unsafe {
@@ -111,23 +99,19 @@ impl FontDrawing for Core
 	}
 }
 
-pub struct Font
-{
+pub struct Font {
 	allegro_font: *mut ALLEGRO_FONT,
 }
 
 unsafe impl Send for Font {}
 unsafe impl Sync for Font {}
 
-impl Font
-{
-	pub fn new_builtin(_: &FontAddon) -> Result<Font, ()>
-	{
+impl Font {
+	pub fn new_builtin(_: &FontAddon) -> Result<Font, ()> {
 		unsafe { Font::wrap_allegro_font(al_create_builtin_font()) }
 	}
 
-	pub fn load_bitmap_font(_: &FontAddon, filename: &str) -> Result<Font, ()>
-	{
+	pub fn load_bitmap_font(_: &FontAddon, filename: &str) -> Result<Font, ()> {
 		unsafe {
 			let filename = CString::new(filename.as_bytes()).unwrap();
 			let font = al_load_bitmap_font(filename.as_ptr());
@@ -137,8 +121,7 @@ impl Font
 
 	pub fn grab_from_bitmap(
 		_: &FontAddon, bmp: &Bitmap, ranges: &[(c_int, c_int)],
-	) -> Result<Font, ()>
-	{
+	) -> Result<Font, ()> {
 		unsafe {
 			let font = al_grab_font_from_bitmap(
 				bmp.get_allegro_bitmap(),
@@ -149,25 +132,19 @@ impl Font
 		}
 	}
 
-	pub unsafe fn wrap_allegro_font(font: *mut ALLEGRO_FONT) -> Result<Font, ()>
-	{
-		if font.is_null()
-		{
+	pub unsafe fn wrap_allegro_font(font: *mut ALLEGRO_FONT) -> Result<Font, ()> {
+		if font.is_null() {
 			Err(())
-		}
-		else
-		{
+		} else {
 			Ok(Font { allegro_font: font })
 		}
 	}
 
-	pub fn get_font(&self) -> *mut ALLEGRO_FONT
-	{
+	pub fn get_font(&self) -> *mut ALLEGRO_FONT {
 		self.allegro_font
 	}
 
-	pub fn get_text_width(&self, text: &str) -> i32
-	{
+	pub fn get_text_width(&self, text: &str) -> i32 {
 		unsafe {
 			let mut info = mem::MaybeUninit::uninit();
 			let ustr = al_ref_buffer(
@@ -179,23 +156,19 @@ impl Font
 		}
 	}
 
-	pub fn get_line_height(&self) -> i32
-	{
+	pub fn get_line_height(&self) -> i32 {
 		unsafe { al_get_font_line_height(self.get_font() as *const _) as i32 }
 	}
 
-	pub fn get_ascent(&self) -> i32
-	{
+	pub fn get_ascent(&self) -> i32 {
 		unsafe { al_get_font_ascent(self.get_font() as *const _) as i32 }
 	}
 
-	pub fn get_descent(&self) -> i32
-	{
+	pub fn get_descent(&self) -> i32 {
 		unsafe { al_get_font_descent(self.get_font() as *const _) as i32 }
 	}
 
-	pub fn get_text_dimensions(&self, text: &str) -> (i32, i32, i32, i32)
-	{
+	pub fn get_text_dimensions(&self, text: &str) -> (i32, i32, i32, i32) {
 		unsafe {
 			let mut x = mem::MaybeUninit::uninit();
 			let mut y = mem::MaybeUninit::uninit();
@@ -226,10 +199,8 @@ impl Font
 }
 
 // Not Send just because of the marker
-impl Drop for Font
-{
-	fn drop(&mut self)
-	{
+impl Drop for Font {
+	fn drop(&mut self) {
 		unsafe {
 			al_destroy_font(self.allegro_font);
 		}

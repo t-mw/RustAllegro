@@ -11,91 +11,71 @@ use libc::*;
 use std::marker::PhantomData;
 use std::mem;
 
-pub struct EventQueue
-{
+pub struct EventQueue {
 	allegro_queue: *mut ALLEGRO_EVENT_QUEUE,
 }
 
-impl EventQueue
-{
-	pub unsafe fn wrap(queue: *mut ALLEGRO_EVENT_QUEUE) -> EventQueue
-	{
+impl EventQueue {
+	pub unsafe fn wrap(queue: *mut ALLEGRO_EVENT_QUEUE) -> EventQueue {
 		EventQueue {
 			allegro_queue: queue,
 		}
 	}
 
-	pub fn new(_: &Core) -> Result<EventQueue, ()>
-	{
+	pub fn new(_: &Core) -> Result<EventQueue, ()> {
 		unsafe {
 			let q = al_create_event_queue();
-			if q.is_null()
-			{
+			if q.is_null() {
 				Err(())
-			}
-			else
-			{
+			} else {
 				Ok(EventQueue::wrap(q))
 			}
 		}
 	}
 
-	pub fn register_event_source(&self, src: EventSource)
-	{
+	pub fn register_event_source(&self, src: EventSource) {
 		unsafe {
 			al_register_event_source(self.allegro_queue, src.allegro_source);
 		}
 	}
 
-	pub fn is_empty(&self) -> bool
-	{
+	pub fn is_empty(&self) -> bool {
 		unsafe { al_is_event_queue_empty(self.allegro_queue) != 0 }
 	}
 
-	pub fn get_next_event(&self) -> Event
-	{
+	pub fn get_next_event(&self) -> Event {
 		let mut e = ALLEGRO_EVENT::new();
 		unsafe {
-			if al_get_next_event(self.allegro_queue, &mut e) != 0
-			{
+			if al_get_next_event(self.allegro_queue, &mut e) != 0 {
 				Event::from_allegro_event(&mut e)
-			}
-			else
-			{
+			} else {
 				NoEvent
 			}
 		}
 	}
 
-	pub fn peek_next_event(&self) -> Event
-	{
+	pub fn peek_next_event(&self) -> Event {
 		let mut e = ALLEGRO_EVENT::new();
 		unsafe {
-			if al_peek_next_event(self.allegro_queue, &mut e) != 0
-			{
+			if al_peek_next_event(self.allegro_queue, &mut e) != 0 {
 				Event::from_allegro_event(&mut e)
-			}
-			else
-			{
+			} else {
 				NoEvent
 			}
 		}
 	}
 
-	pub fn drop_next_event(&self) -> bool
-	{
+	pub fn drop_next_event(&self) -> bool {
 		unsafe { al_drop_next_event(self.allegro_queue) != 0 }
 	}
 
-	pub fn flush(&self)
-	{
+	pub fn flush(&self) {
 		unsafe {
 			al_flush_event_queue(self.allegro_queue);
 		}
 	}
 
-	pub fn wait_for_event(&self) -> Event
-	{
+	pub fn wait_for_event(&self) -> Event {
 		let mut e = ALLEGRO_EVENT::new();
 		unsafe {
 			al_wait_for_event(self.allegro_queue, &mut e);
@@ -103,8 +83,7 @@ impl EventQueue
 		Event::from_allegro_event(&mut e)
 	}
 
-	pub fn wait_for_event_timed(&self, secs: f64) -> Event
-	{
+	pub fn wait_for_event_timed(&self, secs: f64) -> Event {
 		let mut e = ALLEGRO_EVENT::new();
 		unsafe {
 			al_wait_for_event_timed(self.allegro_queue, &mut e, secs as c_float);
@@ -113,13 +92,10 @@ impl EventQueue
 	}
 }
 
-impl Iterator for EventQueue
-{
+impl Iterator for EventQueue {
 	type Item = Event;
-	fn next(&mut self) -> Option<Event>
-	{
-		match self.get_next_event()
-		{
+	fn next(&mut self) -> Option<Event> {
+		match self.get_next_event() {
 			NoEvent => None,
 			e => Some(e),
 		}
@@ -127,10 +103,8 @@ impl Iterator for EventQueue
 }
 
 // Not Send just because of the marker
-impl Drop for EventQueue
-{
-	fn drop(&mut self)
-	{
+impl Drop for EventQueue {
+	fn drop(&mut self) {
 		unsafe {
 			al_destroy_event_queue(self.allegro_queue);
 		}
@@ -138,39 +112,32 @@ impl Drop for EventQueue
 }
 
 #[derive(Copy, Clone)]
-pub struct EventSource<'l>
-{
+pub struct EventSource<'l> {
 	allegro_source: *mut ALLEGRO_EVENT_SOURCE,
 	marker: PhantomData<&'l ()>,
 }
 
-impl<'m> EventSource<'m>
-{
-	pub unsafe fn wrap<'l>(source: *mut ALLEGRO_EVENT_SOURCE) -> EventSource<'l>
-	{
+impl<'m> EventSource<'m> {
+	pub unsafe fn wrap<'l>(source: *mut ALLEGRO_EVENT_SOURCE) -> EventSource<'l> {
 		EventSource {
 			allegro_source: source,
 			marker: PhantomData,
 		}
 	}
 
-	pub fn get_event_source(&self) -> *mut ALLEGRO_EVENT_SOURCE
-	{
+	pub fn get_event_source(&self) -> *mut ALLEGRO_EVENT_SOURCE {
 		self.allegro_source
 	}
 }
 
 #[derive(Copy, Clone, Debug)]
-pub enum Event
-{
+pub enum Event {
 	NoEvent,
-	DisplayClose
-	{
+	DisplayClose {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 	},
-	DisplayResize
-	{
+	DisplayResize {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		x: i32,
 		y: i32,
@@ -178,8 +145,7 @@ pub enum Event
 		height: i32,
 		timestamp: f64,
 	},
-	JoystickAxes
-	{
+	JoystickAxes {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		id: *mut ALLEGRO_JOYSTICK,
@@ -187,41 +153,35 @@ pub enum Event
 		axis: i32,
 		pos: f32,
 	},
-	JoystickButtonDown
-	{
+	JoystickButtonDown {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		id: *mut ALLEGRO_JOYSTICK,
 		button: i32,
 	},
-	JoystickButtonUp
-	{
+	JoystickButtonUp {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		id: *mut ALLEGRO_JOYSTICK,
 		button: i32,
 	},
-	JoystickConfiguration
-	{
+	JoystickConfiguration {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 	},
-	KeyDown
-	{
-		source: *mut ALLEGRO_EVENT_SOURCE,
-		timestamp: f64,
-		keycode: KeyCode,
-		display: *mut ALLEGRO_DISPLAY,
-	},
-	KeyUp
-	{
+	KeyDown {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		keycode: KeyCode,
 		display: *mut ALLEGRO_DISPLAY,
 	},
-	KeyChar
-	{
+	KeyUp {
+		source: *mut ALLEGRO_EVENT_SOURCE,
+		timestamp: f64,
+		keycode: KeyCode,
+		display: *mut ALLEGRO_DISPLAY,
+	},
+	KeyChar {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		keycode: KeyCode,
@@ -230,8 +190,7 @@ pub enum Event
 		repeat: bool,
 		modifiers: KeyModifier,
 	},
-	MouseAxes
-	{
+	MouseAxes {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		x: i32,
@@ -244,8 +203,7 @@ pub enum Event
 		dw: i32,
 		display: *mut ALLEGRO_DISPLAY,
 	},
-	MouseButtonDown
-	{
+	MouseButtonDown {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		x: i32,
@@ -255,8 +213,7 @@ pub enum Event
 		button: u32,
 		display: *mut ALLEGRO_DISPLAY,
 	},
-	MouseButtonUp
-	{
+	MouseButtonUp {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		x: i32,
@@ -266,8 +223,7 @@ pub enum Event
 		button: u32,
 		display: *mut ALLEGRO_DISPLAY,
 	},
-	MouseWarped
-	{
+	MouseWarped {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		x: i32,
@@ -280,8 +236,7 @@ pub enum Event
 		dw: i32,
 		display: *mut ALLEGRO_DISPLAY,
 	},
-	MouseEnterDisplay
-	{
+	MouseEnterDisplay {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		x: i32,
@@ -290,8 +245,7 @@ pub enum Event
 		w: i32,
 		display: *mut ALLEGRO_DISPLAY,
 	},
-	MouseLeaveDisplay
-	{
+	MouseLeaveDisplay {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		x: i32,
@@ -300,29 +254,24 @@ pub enum Event
 		w: i32,
 		display: *mut ALLEGRO_DISPLAY,
 	},
-	TimerTick
-	{
+	TimerTick {
 		source: *mut ALLEGRO_EVENT_SOURCE,
 		timestamp: f64,
 		count: i64,
 	},
 }
 
-impl Event
-{
-	fn from_allegro_event(e: &mut ALLEGRO_EVENT) -> Event
-	{
+impl Event {
+	fn from_allegro_event(e: &mut ALLEGRO_EVENT) -> Event {
 		unsafe {
 			let src = (*e.any()).source;
 			let ts = (*e.any()).timestamp as f64;
-			match *e._type() as u32
-			{
+			match *e._type() as u32 {
 				ALLEGRO_EVENT_DISPLAY_CLOSE => DisplayClose {
 					source: src,
 					timestamp: ts,
 				},
-				ALLEGRO_EVENT_DISPLAY_RESIZE =>
-				{
+				ALLEGRO_EVENT_DISPLAY_RESIZE => {
 					let a = *e.display();
 					DisplayResize {
 						source: src,
@@ -333,8 +282,7 @@ impl Event
 						timestamp: ts,
 					}
 				}
-				ALLEGRO_EVENT_JOYSTICK_AXIS =>
-				{
+				ALLEGRO_EVENT_JOYSTICK_AXIS => {
 					let a = *e.joystick();
 					JoystickAxes {
 						source: src,
@@ -345,8 +293,7 @@ impl Event
 						pos: a.pos as f32,
 					}
 				}
-				ALLEGRO_EVENT_JOYSTICK_BUTTON_DOWN =>
-				{
+				ALLEGRO_EVENT_JOYSTICK_BUTTON_DOWN => {
 					let a = *e.joystick();
 					JoystickButtonDown {
 						source: src,
@@ -355,8 +302,7 @@ impl Event
 						button: a.button as i32,
 					}
 				}
-				ALLEGRO_EVENT_JOYSTICK_BUTTON_UP =>
-				{
+				ALLEGRO_EVENT_JOYSTICK_BUTTON_UP => {
 					let a = *e.joystick();
 					JoystickButtonUp {
 						source: src,
@@ -369,8 +315,7 @@ impl Event
 					source: src,
 					timestamp: ts,
 				},
-				ALLEGRO_EVENT_KEY_DOWN =>
-				{
+				ALLEGRO_EVENT_KEY_DOWN => {
 					let k = *e.keyboard();
 					KeyDown {
 						source: src,
@@ -379,8 +324,7 @@ impl Event
 						display: k.display,
 					}
 				}
-				ALLEGRO_EVENT_KEY_UP =>
-				{
+				ALLEGRO_EVENT_KEY_UP => {
 					let k = *e.keyboard();
 					KeyUp {
 						source: src,
@@ -389,8 +333,7 @@ impl Event
 						display: k.display,
 					}
 				}
-				ALLEGRO_EVENT_KEY_CHAR =>
-				{
+				ALLEGRO_EVENT_KEY_CHAR => {
 					let k = *e.keyboard();
 					KeyChar {
 						source: src,
@@ -402,8 +345,7 @@ impl Event
 						modifiers: mem::transmute(k.modifiers),
 					}
 				}
-				ALLEGRO_EVENT_MOUSE_AXES =>
-				{
+				ALLEGRO_EVENT_MOUSE_AXES => {
 					let m = *e.mouse();
 					MouseAxes {
 						source: src,
@@ -419,8 +361,7 @@ impl Event
 						display: m.display,
 					}
 				}
-				ALLEGRO_EVENT_MOUSE_BUTTON_DOWN =>
-				{
+				ALLEGRO_EVENT_MOUSE_BUTTON_DOWN => {
 					let m = *e.mouse();
 					MouseButtonDown {
 						source: src,
@@ -433,8 +374,7 @@ impl Event
 						display: m.display,
 					}
 				}
-				ALLEGRO_EVENT_MOUSE_BUTTON_UP =>
-				{
+				ALLEGRO_EVENT_MOUSE_BUTTON_UP => {
 					let m = *e.mouse();
 					MouseButtonUp {
 						source: src,
@@ -447,8 +387,7 @@ impl Event
 						display: m.display,
 					}
 				}
-				ALLEGRO_EVENT_MOUSE_WARPED =>
-				{
+				ALLEGRO_EVENT_MOUSE_WARPED => {
 					let m = *e.mouse();
 					MouseWarped {
 						source: src,
@@ -464,8 +403,7 @@ impl Event
 						display: m.display,
 					}
 				}
-				ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY =>
-				{
+				ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY => {
 					let m = *e.mouse();
 					MouseEnterDisplay {
 						source: src,
@@ -477,8 +415,7 @@ impl Event
 						display: m.display,
 					}
 				}
-				ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY =>
-				{
+				ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY => {
 					let m = *e.mouse();
 					MouseLeaveDisplay {
 						source: src,
@@ -490,8 +427,7 @@ impl Event
 						display: m.display,
 					}
 				}
-				ALLEGRO_EVENT_TIMER =>
-				{
+				ALLEGRO_EVENT_TIMER => {
 					let t = *e.timer();
 					TimerTick {
 						source: src,

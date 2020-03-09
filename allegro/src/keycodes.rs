@@ -9,8 +9,7 @@ use std::mem;
 
 #[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum KeyCode
-{
+pub enum KeyCode {
 	A = 1,
 	B = 2,
 	C = 3,
@@ -133,10 +132,8 @@ pub enum KeyCode
 	CapsLock = 226,
 }
 
-impl KeyCode
-{
-	pub unsafe fn from_allegro_key(k: c_int) -> KeyCode
-	{
+impl KeyCode {
+	pub unsafe fn from_allegro_key(k: c_int) -> KeyCode {
 		mem::transmute(k as u32)
 	}
 }

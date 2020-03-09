@@ -113,7 +113,6 @@ allegro_main! {
 }
 
 #[cfg(not(any(allegro_5_2_0, allegro_5_1_0)))]
-fn main()
-{
+fn main() {
 	panic!("This example needs at least Allegro 5.1");
 }

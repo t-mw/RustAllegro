@@ -11,20 +11,16 @@ use std::ptr;
 /// Shader platform.
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum ShaderPlatform
-{
+pub enum ShaderPlatform {
 	/// Automatically detect the platform, only appropriate for shader creation.
 	Auto = ALLEGRO_SHADER_AUTO,
 	GLSL = ALLEGRO_SHADER_GLSL,
 	HLSL = ALLEGRO_SHADER_HLSL,
 }
 
-impl ShaderPlatform
-{
-	pub fn from_allegro(platform: ALLEGRO_SHADER_PLATFORM) -> ShaderPlatform
-	{
-		match platform
-		{
+impl ShaderPlatform {
+	pub fn from_allegro(platform: ALLEGRO_SHADER_PLATFORM) -> ShaderPlatform {
+		match platform {
 			ALLEGRO_SHADER_AUTO => ShaderPlatform::Auto,
 			ALLEGRO_SHADER_GLSL => ShaderPlatform::GLSL,
 			ALLEGRO_SHADER_HLSL => ShaderPlatform::HLSL,
@@ -36,31 +32,26 @@ impl ShaderPlatform
 /// Shader type.
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum ShaderType
-{
+pub enum ShaderType {
 	Pixel = ALLEGRO_PIXEL_SHADER,
 	Vertex = ALLEGRO_VERTEX_SHADER,
 }
 
 /// A shader program comprising of a pixel (fragment) and a vertex shader.
 /// Wraps ALLEGRO_SHADER.
-pub struct Shader
-{
+pub struct Shader {
 	allegro_shader: *mut ALLEGRO_SHADER,
 }
 
-impl Shader
-{
-	pub unsafe fn wrap(shader: *mut ALLEGRO_SHADER) -> Shader
-	{
+impl Shader {
+	pub unsafe fn wrap(shader: *mut ALLEGRO_SHADER) -> Shader {
 		Shader {
 			allegro_shader: shader,
 		}
 	}
 
 	/// Return the wrapped Allegro shader pointer.
-	pub fn get_allegro_shader(&self) -> *mut ALLEGRO_SHADER
-	{
+	pub fn get_allegro_shader(&self) -> *mut ALLEGRO_SHADER {
 		self.allegro_shader
 	}
 
@@ -69,26 +60,20 @@ impl Shader
 	/// Returns the log if there was an error.
 	pub fn attach_shader_source(
 		&self, shader_type: ShaderType, source: Option<&str>,
-	) -> Result<(), String>
-	{
+	) -> Result<(), String> {
 		let shader_type = shader_type as ALLEGRO_SHADER_TYPE;
 		let ret = unsafe {
-			match source
-			{
-				Some(source) =>
-				{
+			match source {
+				Some(source) => {
 					let source = CString::new(source.as_bytes()).unwrap();
 					al_attach_shader_source(self.allegro_shader, shader_type, source.as_ptr())
 				}
 				None => al_attach_shader_source(self.allegro_shader, shader_type, ptr::null()),
 			}
 		};
-		if ret != 0
-		{
+		if ret != 0 {
 			Ok(())
-		}
-		else
-		{
+		} else {
 			Err(self.get_log())
 		}
 	}
@@ -98,8 +83,7 @@ impl Shader
 	/// Returns the log if there was an error.
 	pub fn attach_shader_source_file(
 		&self, shader_type: ShaderType, filename: &str,
-	) -> Result<(), String>
-	{
+	) -> Result<(), String> {
 		let filename = CString::new(filename.as_bytes()).unwrap();
 		let ret = unsafe {
 			al_attach_shader_source_file(
@@ -108,12 +92,9 @@ impl Shader
 				filename.as_ptr(),
 			)
 		};
-		if ret != 0
-		{
+		if ret != 0 {
 			Ok(())
-		}
-		else
-		{
+		} else {
 			Err(self.get_log())
 		}
 	}
@@ -121,22 +102,17 @@ impl Shader
 	/// Build the shader. Call this after attaching the sources.
 	///
 	/// Returns the log if there was an error.
-	pub fn build(&self) -> Result<(), String>
-	{
+	pub fn build(&self) -> Result<(), String> {
 		let ret = unsafe { al_build_shader(self.allegro_shader) };
-		if ret != 0
-		{
+		if ret != 0 {
 			Ok(())
-		}
-		else
-		{
+		} else {
 			Err(self.get_log())
 		}
 	}
 
 	/// Get the log from the shader. Call this function if any of the attach/build functions fail to determine what went wrong.
-	pub fn get_log(&self) -> String
-	{
+	pub fn get_log(&self) -> String {
 		unsafe {
 			let log = al_get_shader_log(self.allegro_shader);
 			CStr::from_ptr(log).to_string_lossy().into_owned()
@@ -144,16 +120,13 @@ impl Shader
 	}
 
 	/// Return the platform of this shader.
-	pub fn get_platform(&self) -> ShaderPlatform
-	{
+	pub fn get_platform(&self) -> ShaderPlatform {
 		unsafe { ShaderPlatform::from_allegro(al_get_shader_platform(self.allegro_shader)) }
 	}
 }
 
-impl Drop for Shader
-{
-	fn drop(&mut self)
-	{
+impl Drop for Shader {
+	fn drop(&mut self) {
 		unsafe {
 			al_destroy_shader(self.allegro_shader);
 		}
@@ -164,17 +137,14 @@ unsafe impl Send for Shader {}
 unsafe impl Sync for Shader {}
 
 /// Trait implemented by types that can be used to set uniforms in shaders.
-pub trait ShaderUniform
-{
+pub trait ShaderUniform {
 	unsafe fn set_self_for_shader(&self, name: &str) -> Result<(), ()>;
 }
 
 macro_rules! impl_shader_vector {
 	($rust_type:ty, $func:expr, $num_elems:expr, $c_type:ty) => {
-		impl ShaderUniform for $rust_type
-		{
-			unsafe fn set_self_for_shader(&self, name: &str) -> Result<(), ()>
-			{
+		impl ShaderUniform for $rust_type {
+			unsafe fn set_self_for_shader(&self, name: &str) -> Result<(), ()> {
 				let c_name = CString::new(name.as_bytes()).unwrap();
 				//~ println!("{} {} {} {}", name, $num_elems, self.len(), stringify!($func));
 				let ret = $func(
@@ -183,12 +153,9 @@ macro_rules! impl_shader_vector {
 					self.as_ptr() as *mut $c_type,
 					self.len() as i32,
 				);
-				if ret != 0
-				{
+				if ret != 0 {
 					Ok(())
-				}
-				else
-				{
+				} else {
 					Err(())
 				}
 			}

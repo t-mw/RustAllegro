@@ -11,30 +11,25 @@ use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 
 #[doc(hidden)]
-pub trait AttachToMixerImpl
-{
+pub trait AttachToMixerImpl {
 	fn create_connection(&mut self, allegro_mixer: *mut ALLEGRO_MIXER) -> Result<Connection, ()>;
 }
 
 #[doc(hidden)]
-pub trait HasMixer
-{
+pub trait HasMixer {
 	fn get_mixer<'l>(&'l self) -> &'l Mixer;
 	fn get_mixer_mut<'l>(&'l mut self) -> &'l mut Mixer;
 }
 
 // When a connection is broken, the callback is called on the payload
-pub struct Connection
-{
+pub struct Connection {
 	active: Arc<AtomicBool>,
 	payload: *mut c_void,
 	callback: fn(*mut c_void),
 }
 
-impl Connection
-{
-	pub fn new(payload: *mut c_void, callback: fn(*mut c_void)) -> (Connection, Connection)
-	{
+impl Connection {
+	pub fn new(payload: *mut c_void, callback: fn(*mut c_void)) -> (Connection, Connection) {
 		let active1 = Arc::new(AtomicBool::new(true));
 		let active2 = active1.clone();
 		(
@@ -52,12 +47,9 @@ impl Connection
 	}
 }
 
-impl Drop for Connection
-{
-	fn drop(&mut self)
-	{
-		if self.active.swap(false, SeqCst)
-		{
+impl Drop for Connection {
+	fn drop(&mut self) {
+		if self.active.swap(false, SeqCst) {
 			(self.callback)(self.payload);
 		}
 	}

@@ -42,12 +42,10 @@ macro_rules! get_bool_impl {
 	};
 }
 
-pub trait AttachToMixer: AttachToMixerImpl
-{
+pub trait AttachToMixer: AttachToMixerImpl {
 	fn detach(&mut self);
 
-	fn attach<T: HasMixer>(&mut self, mixer: &mut T) -> Result<(), ()>
-	{
+	fn attach<T: HasMixer>(&mut self, mixer: &mut T) -> Result<(), ()> {
 		self.detach();
 
 		let m = mixer.get_mixer_mut();
@@ -57,38 +55,30 @@ pub trait AttachToMixer: AttachToMixerImpl
 	}
 }
 
-struct CallbackHolder
-{
+struct CallbackHolder {
 	cb: Box<dyn PostProcessCallback + Send>,
 	sample_size: usize,
 }
 
-pub struct Mixer
-{
+pub struct Mixer {
 	allegro_mixer: *mut ALLEGRO_MIXER,
 	parent: Option<Connection>,
 	children: Vec<Connection>,
 	callback: Option<Box<CallbackHolder>>,
 }
 
-impl Mixer
-{
-	pub fn new(addon: &AudioAddon) -> Result<Mixer, ()>
-	{
+impl Mixer {
+	pub fn new(addon: &AudioAddon) -> Result<Mixer, ()> {
 		Mixer::new_custom(addon, 44100, AudioDepth::F32, ChannelConf::Conf2)
 	}
 
 	pub fn new_custom(
 		_: &AudioAddon, frequency: u32, depth: AudioDepth, chan_conf: ChannelConf,
-	) -> Result<Mixer, ()>
-	{
+	) -> Result<Mixer, ()> {
 		let mixer = unsafe { al_create_mixer(frequency as c_uint, depth.get(), chan_conf.get()) };
-		if mixer.is_null()
-		{
+		if mixer.is_null() {
 			Err(())
-		}
-		else
-		{
+		} else {
 			Ok(Mixer {
 				allegro_mixer: mixer,
 				parent: None,
@@ -98,23 +88,19 @@ impl Mixer
 		}
 	}
 
-	pub fn get_allegro_mixer(&self) -> *mut ALLEGRO_MIXER
-	{
+	pub fn get_allegro_mixer(&self) -> *mut ALLEGRO_MIXER {
 		self.allegro_mixer
 	}
 
-	fn detach(allegro_mixer: *mut c_void)
-	{
+	fn detach(allegro_mixer: *mut c_void) {
 		unsafe {
 			al_detach_mixer(mem::transmute(allegro_mixer));
 		}
 	}
 }
 
-impl Drop for Mixer
-{
-	fn drop(&mut self)
-	{
+impl Drop for Mixer {
+	fn drop(&mut self) {
 		self.detach();
 		self.children.clear();
 		unsafe {
@@ -126,17 +112,14 @@ impl Drop for Mixer
 unsafe impl Send for Mixer {}
 unsafe impl Sync for Mixer {}
 
-pub trait MixerLike: HasMixer
-{
-	fn get_allegro_mixer(&self) -> *mut ALLEGRO_MIXER
-	{
+pub trait MixerLike: HasMixer {
+	fn get_allegro_mixer(&self) -> *mut ALLEGRO_MIXER {
 		self.get_mixer().allegro_mixer
 	}
 
 	fn play_sample(
 		&mut self, sample: &Sample, gain: f32, pan: Option<f32>, speed: f32, playmode: Playmode,
-	) -> Result<SampleInstance, ()>
-	{
+	) -> Result<SampleInstance, ()> {
 		let inst = sample.create_instance();
 		inst.and_then(|mut inst| {
 			let m = self.get_mixer_mut();
@@ -150,71 +133,57 @@ pub trait MixerLike: HasMixer
 		})
 	}
 
-	fn get_frequency(&self) -> u32
-	{
+	fn get_frequency(&self) -> u32 {
 		get_impl!(self, al_get_mixer_frequency, u32)
 	}
 
-	fn get_gain(&self) -> f32
-	{
+	fn get_gain(&self) -> f32 {
 		get_impl!(self, al_get_mixer_gain, f32)
 	}
 
-	fn get_quality(&self) -> MixerQuality
-	{
+	fn get_quality(&self) -> MixerQuality {
 		get_conv_impl!(self, al_get_mixer_quality, MixerQuality::from_allegro)
 	}
 
-	fn get_channels(&self) -> ChannelConf
-	{
+	fn get_channels(&self) -> ChannelConf {
 		get_conv_impl!(self, al_get_mixer_channels, ChannelConf::from_allegro)
 	}
 
-	fn get_depth(&self) -> AudioDepth
-	{
+	fn get_depth(&self) -> AudioDepth {
 		get_conv_impl!(self, al_get_mixer_depth, AudioDepth::from_allegro)
 	}
 
-	fn get_playing(&self) -> bool
-	{
+	fn get_playing(&self) -> bool {
 		get_bool_impl!(self, al_get_mixer_playing)
 	}
 
-	fn get_attached(&self) -> bool
-	{
+	fn get_attached(&self) -> bool {
 		get_bool_impl!(self, al_get_mixer_attached)
 	}
 
-	fn set_playing(&self, playing: bool) -> Result<(), ()>
-	{
+	fn set_playing(&self, playing: bool) -> Result<(), ()> {
 		set_impl!(self, al_set_mixer_playing, playing as c_bool)
 	}
 
-	fn set_gain(&self, gain: f32) -> Result<(), ()>
-	{
+	fn set_gain(&self, gain: f32) -> Result<(), ()> {
 		set_impl!(self, al_set_mixer_gain, gain as c_float)
 	}
 
-	fn set_frequency(&self, freq: u32) -> Result<(), ()>
-	{
+	fn set_frequency(&self, freq: u32) -> Result<(), ()> {
 		set_impl!(self, al_set_mixer_frequency, freq as u32)
 	}
 
-	fn set_quality(&self, quality: MixerQuality) -> Result<(), ()>
-	{
+	fn set_quality(&self, quality: MixerQuality) -> Result<(), ()> {
 		set_impl!(self, al_set_mixer_quality, quality.get())
 	}
 
 	fn set_postprocess_callback(
 		&mut self, cb: Option<Box<dyn PostProcessCallback + Send>>,
-	) -> Result<(), ()>
-	{
+	) -> Result<(), ()> {
 		let allegro_mixer = self.get_mixer().allegro_mixer;
 
-		match cb
-		{
-			Some(cb) =>
-			{
+		match cb {
+			Some(cb) => {
 				let mut cbh = Box::new(CallbackHolder {
 					cb: cb,
 					sample_size: self.get_channels().get_num_channels()
@@ -227,19 +196,16 @@ pub trait MixerLike: HasMixer
 						&mut *cbh as *mut _ as *mut _,
 					)
 				};
-				if ret == 0
-				{
+				if ret == 0 {
 					return Err(());
 				}
 				self.get_mixer_mut().callback = Some(cbh);
 			}
-			None =>
-			{
+			None => {
 				let ret = unsafe {
 					al_set_mixer_postprocess_callback(allegro_mixer, None, ptr::null_mut())
 				};
-				if ret == 0
-				{
+				if ret == 0 {
 					return Err(());
 				}
 				self.get_mixer_mut().callback = None;
@@ -249,8 +215,7 @@ pub trait MixerLike: HasMixer
 	}
 }
 
-extern "C" fn mixer_callback(data: *mut c_void, num_samples: c_uint, cb: *mut c_void)
-{
+extern "C" fn mixer_callback(data: *mut c_void, num_samples: c_uint, cb: *mut c_void) {
 	use std::slice::from_raw_parts_mut;
 	unsafe {
 		let cbh: &mut CallbackHolder = mem::transmute(cb);
@@ -259,25 +224,17 @@ extern "C" fn mixer_callback(data: *mut c_void, num_samples: c_uint, cb: *mut c_
 	}
 }
 
-pub trait PostProcessCallback
-{
+pub trait PostProcessCallback {
 	fn process(&mut self, data: &mut [u8], num_samples: u32);
 }
 
-impl AttachToMixerImpl for Mixer
-{
-	fn create_connection(&mut self, allegro_mixer: *mut ALLEGRO_MIXER) -> Result<Connection, ()>
-	{
-		if self.allegro_mixer == allegro_mixer
-		{
+impl AttachToMixerImpl for Mixer {
+	fn create_connection(&mut self, allegro_mixer: *mut ALLEGRO_MIXER) -> Result<Connection, ()> {
+		if self.allegro_mixer == allegro_mixer {
 			Err(())
-		}
-		else if unsafe { al_attach_mixer_to_mixer(self.allegro_mixer, allegro_mixer) == 0 }
-		{
+		} else if unsafe { al_attach_mixer_to_mixer(self.allegro_mixer, allegro_mixer) == 0 } {
 			Err(())
-		}
-		else
-		{
+		} else {
 			let (c1, c2) =
 				Connection::new(unsafe { mem::transmute(self.allegro_mixer) }, Mixer::detach);
 			self.parent = Some(c1);
@@ -286,23 +243,18 @@ impl AttachToMixerImpl for Mixer
 	}
 }
 
-impl AttachToMixer for Mixer
-{
-	fn detach(&mut self)
-	{
+impl AttachToMixer for Mixer {
+	fn detach(&mut self) {
 		self.parent = None;
 	}
 }
 
-impl HasMixer for Mixer
-{
-	fn get_mixer<'l>(&'l self) -> &'l Mixer
-	{
+impl HasMixer for Mixer {
+	fn get_mixer<'l>(&'l self) -> &'l Mixer {
 		self
 	}
 
-	fn get_mixer_mut<'l>(&'l mut self) -> &'l mut Mixer
-	{
+	fn get_mixer_mut<'l>(&'l mut self) -> &'l mut Mixer {
 		self
 	}
 }

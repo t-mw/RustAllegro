@@ -12,19 +12,14 @@ use allegro_font::*;
 use getopts::*;
 use std::env;
 
-struct AudioCallback
-{
+struct AudioCallback {
 	silence: bool,
 }
 
-impl PostProcessCallback for AudioCallback
-{
-	fn process(&mut self, data: &mut [u8], _: u32)
-	{
-		if self.silence
-		{
-			for u in data.iter_mut()
-			{
+impl PostProcessCallback for AudioCallback {
+	fn process(&mut self, data: &mut [u8], _: u32) {
+		if self.silence {
+			for u in data.iter_mut() {
 				*u = 0;
 			}
 		}

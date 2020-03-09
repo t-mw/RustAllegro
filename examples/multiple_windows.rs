@@ -13,10 +13,8 @@ use std::thread::spawn;
 
 fn other_window(
 	core: Arc<Core>, font_addon: Arc<FontAddon>, sender: mpsc::SyncSender<()>, init_only: bool,
-)
-{
-	if init_only
-	{
+) {
+	if init_only {
 		return;
 	}
 
@@ -36,10 +34,8 @@ fn other_window(
 	let mut d = 0.01;
 	let mut redraw = true;
 	timer.start();
-	'exit: loop
-	{
-		if redraw && q.is_empty()
-		{
+	'exit: loop {
+		if redraw && q.is_empty() {
 			core.set_target_bitmap(Some(disp.get_backbuffer()));
 			core.clear_to_color(Color::from_rgb_f(0.0, 0.0, c));
 			core.draw_text(
@@ -54,27 +50,21 @@ fn other_window(
 			redraw = false;
 		}
 
-		match q.wait_for_event()
-		{
-			DisplayClose { .. } =>
-			{
+		match q.wait_for_event() {
+			DisplayClose { .. } => {
 				break 'exit;
 			}
-			KeyDown { keycode: k, .. } if k == KeyCode::Escape =>
-			{
+			KeyDown { keycode: k, .. } if k == KeyCode::Escape => {
 				break 'exit;
 			}
-			TimerTick { .. } =>
-			{
+			TimerTick { .. } => {
 				redraw = true;
 				c += d;
-				if c > 1.0
-				{
+				if c > 1.0 {
 					c = 1.0;
 					d = -d;
 				}
-				if c < 0.0
-				{
+				if c < 0.0 {
 					c = 0.0;
 					d = -d;
 				}

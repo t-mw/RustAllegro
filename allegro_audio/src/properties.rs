@@ -5,8 +5,7 @@
 use allegro_audio_sys::*;
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum AudioDepth
-{
+pub enum AudioDepth {
 	I8,
 	I16,
 	I24,
@@ -16,12 +15,9 @@ pub enum AudioDepth
 	F32,
 }
 
-impl AudioDepth
-{
-	pub fn from_allegro(val: ALLEGRO_AUDIO_DEPTH) -> AudioDepth
-	{
-		match val
-		{
+impl AudioDepth {
+	pub fn from_allegro(val: ALLEGRO_AUDIO_DEPTH) -> AudioDepth {
+		match val {
 			ALLEGRO_AUDIO_DEPTH_INT8 => AudioDepth::I8,
 			ALLEGRO_AUDIO_DEPTH_INT16 => AudioDepth::I16,
 			ALLEGRO_AUDIO_DEPTH_INT24 => AudioDepth::I24,
@@ -32,10 +28,8 @@ impl AudioDepth
 		}
 	}
 
-	pub fn get(&self) -> ALLEGRO_AUDIO_DEPTH
-	{
-		match *self
-		{
+	pub fn get(&self) -> ALLEGRO_AUDIO_DEPTH {
+		match *self {
 			AudioDepth::I8 => ALLEGRO_AUDIO_DEPTH_INT8,
 			AudioDepth::I16 => ALLEGRO_AUDIO_DEPTH_INT16,
 			AudioDepth::I24 => ALLEGRO_AUDIO_DEPTH_INT24,
@@ -46,10 +40,8 @@ impl AudioDepth
 		}
 	}
 
-	pub fn get_byte_size(&self) -> usize
-	{
-		match *self
-		{
+	pub fn get_byte_size(&self) -> usize {
+		match *self {
 			AudioDepth::I8 => 1,
 			AudioDepth::I16 => 2,
 			AudioDepth::I24 => 3,
@@ -62,8 +54,7 @@ impl AudioDepth
 }
 
 #[derive(Copy, Clone)]
-pub enum ChannelConf
-{
+pub enum ChannelConf {
 	Conf1,
 	Conf2,
 	Conf3,
@@ -73,12 +64,9 @@ pub enum ChannelConf
 	Conf71,
 }
 
-impl ChannelConf
-{
-	pub fn from_allegro(val: ALLEGRO_CHANNEL_CONF) -> ChannelConf
-	{
-		match val
-		{
+impl ChannelConf {
+	pub fn from_allegro(val: ALLEGRO_CHANNEL_CONF) -> ChannelConf {
+		match val {
 			ALLEGRO_CHANNEL_CONF_1 => ChannelConf::Conf1,
 			ALLEGRO_CHANNEL_CONF_2 => ChannelConf::Conf2,
 			ALLEGRO_CHANNEL_CONF_3 => ChannelConf::Conf3,
@@ -89,10 +77,8 @@ impl ChannelConf
 		}
 	}
 
-	pub fn get(&self) -> ALLEGRO_CHANNEL_CONF
-	{
-		match *self
-		{
+	pub fn get(&self) -> ALLEGRO_CHANNEL_CONF {
+		match *self {
 			ChannelConf::Conf1 => ALLEGRO_CHANNEL_CONF_1,
 			ChannelConf::Conf2 => ALLEGRO_CHANNEL_CONF_2,
 			ChannelConf::Conf3 => ALLEGRO_CHANNEL_CONF_3,
@@ -103,10 +89,8 @@ impl ChannelConf
 		}
 	}
 
-	pub fn get_num_channels(&self) -> usize
-	{
-		match *self
-		{
+	pub fn get_num_channels(&self) -> usize {
+		match *self {
 			ChannelConf::Conf1 => 1,
 			ChannelConf::Conf2 => 2,
 			ChannelConf::Conf3 => 3,
@@ -119,19 +103,15 @@ impl ChannelConf
 }
 
 #[derive(Copy, Clone)]
-pub enum Playmode
-{
+pub enum Playmode {
 	Once,
 	Loop,
 	BiDir,
 }
 
-impl Playmode
-{
-	pub fn from_allegro(val: ALLEGRO_PLAYMODE) -> Playmode
-	{
-		match val
-		{
+impl Playmode {
+	pub fn from_allegro(val: ALLEGRO_PLAYMODE) -> Playmode {
+		match val {
 			ALLEGRO_PLAYMODE_ONCE => Playmode::Once,
 			ALLEGRO_PLAYMODE_LOOP => Playmode::Loop,
 			ALLEGRO_PLAYMODE_BIDIR => Playmode::BiDir,
@@ -139,10 +119,8 @@ impl Playmode
 		}
 	}
 
-	pub fn get(&self) -> ALLEGRO_PLAYMODE
-	{
-		match *self
-		{
+	pub fn get(&self) -> ALLEGRO_PLAYMODE {
+		match *self {
 			Playmode::Once => ALLEGRO_PLAYMODE_ONCE,
 			Playmode::Loop => ALLEGRO_PLAYMODE_LOOP,
 			Playmode::BiDir => ALLEGRO_PLAYMODE_BIDIR,
@@ -151,29 +129,23 @@ impl Playmode
 }
 
 #[derive(Copy, Clone)]
-pub enum MixerQuality
-{
+pub enum MixerQuality {
 	Point,
 	Linear,
 	Cubic,
 }
 
-impl MixerQuality
-{
-	pub fn from_allegro(val: ALLEGRO_MIXER_QUALITY) -> MixerQuality
-	{
-		match val
-		{
+impl MixerQuality {
+	pub fn from_allegro(val: ALLEGRO_MIXER_QUALITY) -> MixerQuality {
+		match val {
 			ALLEGRO_MIXER_QUALITY_POINT => MixerQuality::Point,
 			ALLEGRO_MIXER_QUALITY_LINEAR => MixerQuality::Linear,
 			ALLEGRO_MIXER_QUALITY_CUBIC => MixerQuality::Cubic,
 		}
 	}
 
-	pub fn get(&self) -> ALLEGRO_MIXER_QUALITY
-	{
-		match *self
-		{
+	pub fn get(&self) -> ALLEGRO_MIXER_QUALITY {
+		match *self {
 			MixerQuality::Point => ALLEGRO_MIXER_QUALITY_POINT,
 			MixerQuality::Linear => ALLEGRO_MIXER_QUALITY_LINEAR,
 			MixerQuality::Cubic => ALLEGRO_MIXER_QUALITY_CUBIC,

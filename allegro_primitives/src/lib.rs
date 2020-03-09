@@ -19,8 +19,7 @@ use std::ptr;
 
 #[repr(u32)]
 #[derive(Copy, Clone)]
-pub enum PrimType
-{
+pub enum PrimType {
 	LineList = ALLEGRO_PRIM_LINE_LIST,
 	LineStrip = ALLEGRO_PRIM_LINE_STRIP,
 	LineLoop = ALLEGRO_PRIM_LINE_LOOP,
@@ -30,37 +29,29 @@ pub enum PrimType
 	PointList = ALLEGRO_PRIM_POINT_LIST,
 }
 
-pub struct PrimitivesAddon
-{
+pub struct PrimitivesAddon {
 	_dummy: (),
 }
 
-fn check_valid_target_bitmap()
-{
+fn check_valid_target_bitmap() {
 	unsafe {
-		if al_get_target_bitmap().is_null()
-		{
+		if al_get_target_bitmap().is_null() {
 			panic!("Target bitmap is null!");
 		}
 	}
 }
 
-impl PrimitivesAddon
-{
-	pub fn init(_: &Core) -> Result<PrimitivesAddon, String>
-	{
+impl PrimitivesAddon {
+	pub fn init(_: &Core) -> Result<PrimitivesAddon, String> {
 		use std::sync::Once;
 		static mut RUN_ONCE: Once = Once::new();
 
 		let mut res = Err("The primitives addon already initialized.".into());
 		unsafe {
 			RUN_ONCE.call_once(|| {
-				res = if al_init_primitives_addon() != 0
-				{
+				res = if al_init_primitives_addon() != 0 {
 					Ok(PrimitivesAddon { _dummy: () })
-				}
-				else
-				{
+				} else {
 					Err("Could not initialize the primitives addon.".into())
 				};
 			})
@@ -68,15 +59,13 @@ impl PrimitivesAddon
 		res
 	}
 
-	pub fn get_version() -> i32
-	{
+	pub fn get_version() -> i32 {
 		unsafe { al_get_allegro_primitives_version() as i32 }
 	}
 
 	pub fn draw_prim<T: VertexSource + ?Sized, B: BitmapLike>(
 		&self, vtxs: &T, texture: Option<&B>, start: u32, end: u32, type_: PrimType,
-	) -> u32
-	{
+	) -> u32 {
 		check_valid_target_bitmap();
 		let tex = texture.map_or(ptr::null_mut(), |bmp| bmp.get_allegro_bitmap());
 		unsafe {
@@ -94,8 +83,7 @@ impl PrimitivesAddon
 	pub fn draw_indexed_prim<T: VertexSource + ?Sized, B: BitmapLike>(
 		&self, vtxs: &T, texture: Option<&B>, indices: &[i32], start: u32, end: u32,
 		type_: PrimType,
-	) -> u32
-	{
+	) -> u32 {
 		check_valid_target_bitmap();
 		let tex = texture.map_or(ptr::null_mut(), |bmp| bmp.get_allegro_bitmap());
 		unsafe {
@@ -110,8 +98,7 @@ impl PrimitivesAddon
 		}
 	}
 
-	pub fn draw_line(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: Color, thickness: f32)
-	{
+	pub fn draw_line(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: Color, thickness: f32) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_line(
@@ -127,8 +114,7 @@ impl PrimitivesAddon
 
 	pub fn draw_triangle(
 		&self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, color: Color, thickness: f32,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_triangle(
@@ -144,8 +130,7 @@ impl PrimitivesAddon
 		}
 	}
 
-	pub fn draw_rectangle(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: Color, thickness: f32)
-	{
+	pub fn draw_rectangle(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: Color, thickness: f32) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_rectangle(
@@ -161,8 +146,7 @@ impl PrimitivesAddon
 
 	pub fn draw_rounded_rectangle(
 		&self, x1: f32, y1: f32, x2: f32, y2: f32, rx: f32, ry: f32, color: Color, thickness: f32,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_rounded_rectangle(
@@ -178,8 +162,7 @@ impl PrimitivesAddon
 		}
 	}
 
-	pub fn draw_circle(&self, cx: f32, cy: f32, r: f32, color: Color, thickness: f32)
-	{
+	pub fn draw_circle(&self, cx: f32, cy: f32, r: f32, color: Color, thickness: f32) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_circle(
@@ -192,8 +175,7 @@ impl PrimitivesAddon
 		}
 	}
 
-	pub fn draw_ellipse(&self, cx: f32, cy: f32, rx: f32, ry: f32, color: Color, thickness: f32)
-	{
+	pub fn draw_ellipse(&self, cx: f32, cy: f32, rx: f32, ry: f32, color: Color, thickness: f32) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_ellipse(
@@ -210,8 +192,7 @@ impl PrimitivesAddon
 	pub fn draw_arc(
 		&self, cx: f32, cy: f32, r: f32, start_theta: f32, delta_theta: f32, color: Color,
 		thickness: f32,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_arc(
@@ -229,8 +210,7 @@ impl PrimitivesAddon
 	pub fn draw_elliptical_arc(
 		&self, cx: f32, cy: f32, rx: f32, ry: f32, start_theta: f32, delta_theta: f32,
 		color: Color, thickness: f32,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_elliptical_arc(
@@ -249,8 +229,7 @@ impl PrimitivesAddon
 	pub fn draw_pieslice(
 		&self, cx: f32, cy: f32, r: f32, start_theta: f32, delta_theta: f32, color: Color,
 		thickness: f32,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_pieslice(
@@ -267,15 +246,12 @@ impl PrimitivesAddon
 
 	pub fn draw_spline<T: Iterator<Item = (f32, f32)>>(
 		&self, points: T, color: Color, thickness: f32,
-	) -> Result<(), ()>
-	{
+	) -> Result<(), ()> {
 		check_valid_target_bitmap();
 		let mut c_points: [c_float; 8] = [0.0; 8];
 		let mut idx = 0;
-		for (x, y) in points
-		{
-			if idx >= c_points.len()
-			{
+		for (x, y) in points {
+			if idx >= c_points.len() {
 				return Err(());
 			}
 			c_points[idx + 0] = x as c_float;
@@ -291,8 +267,7 @@ impl PrimitivesAddon
 
 	pub fn draw_filled_triangle(
 		&self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, color: Color,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_filled_triangle(
@@ -307,8 +282,7 @@ impl PrimitivesAddon
 		}
 	}
 
-	pub fn draw_filled_rectangle(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: Color)
-	{
+	pub fn draw_filled_rectangle(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: Color) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_filled_rectangle(
@@ -321,8 +295,7 @@ impl PrimitivesAddon
 		}
 	}
 
-	pub fn draw_filled_ellipse(&self, cx: f32, cy: f32, rx: f32, ry: f32, color: Color)
-	{
+	pub fn draw_filled_ellipse(&self, cx: f32, cy: f32, rx: f32, ry: f32, color: Color) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_filled_ellipse(
@@ -335,8 +308,7 @@ impl PrimitivesAddon
 		}
 	}
 
-	pub fn draw_filled_circle(&self, cx: f32, cy: f32, r: f32, color: Color)
-	{
+	pub fn draw_filled_circle(&self, cx: f32, cy: f32, r: f32, color: Color) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_filled_circle(
@@ -350,8 +322,7 @@ impl PrimitivesAddon
 
 	pub fn draw_filled_pieslice(
 		&self, cx: f32, cy: f32, r: f32, start_theta: f32, delta_theta: f32, color: Color,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_filled_pieslice(
@@ -367,8 +338,7 @@ impl PrimitivesAddon
 
 	pub fn draw_filled_rounded_rectangle(
 		&self, x1: f32, y1: f32, x2: f32, y2: f32, rx: f32, ry: f32, color: Color,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_filled_rounded_rectangle(
@@ -386,8 +356,7 @@ impl PrimitivesAddon
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Vertex
-{
+pub struct Vertex {
 	pub x: f32,
 	pub y: f32,
 	pub z: f32,
@@ -396,8 +365,7 @@ pub struct Vertex
 	pub color: Color,
 }
 
-pub struct VertexDeclBuilder
-{
+pub struct VertexDeclBuilder {
 	pos: Option<ALLEGRO_VERTEX_ELEMENT>,
 	color: Option<ALLEGRO_VERTEX_ELEMENT>,
 	uv: Option<ALLEGRO_VERTEX_ELEMENT>,
@@ -408,8 +376,7 @@ pub struct VertexDeclBuilder
 
 #[repr(i32)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum VertexAttrStorage
-{
+pub enum VertexAttrStorage {
 	F32_1 = ALLEGRO_PRIM_FLOAT_1,
 	F32_2 = ALLEGRO_PRIM_FLOAT_2,
 	F32_3 = ALLEGRO_PRIM_FLOAT_3,
@@ -426,10 +393,8 @@ pub enum VertexAttrStorage
 	HalfF32_4 = ALLEGRO_PRIM_HALF_FLOAT_4,
 }
 
-impl VertexDeclBuilder
-{
-	pub fn new(stride: usize) -> Self
-	{
+impl VertexDeclBuilder {
+	pub fn new(stride: usize) -> Self {
 		VertexDeclBuilder {
 			pos: None,
 			color: None,
@@ -440,8 +405,7 @@ impl VertexDeclBuilder
 		}
 	}
 
-	pub fn pos(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()>
-	{
+	pub fn pos(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()> {
 		if storage != VertexAttrStorage::F32_2
 			&& storage != VertexAttrStorage::F32_3
 			&& storage != VertexAttrStorage::I16_2
@@ -456,8 +420,7 @@ impl VertexDeclBuilder
 		Ok(self)
 	}
 
-	pub fn color(mut self, offset: usize) -> Result<Self, ()>
-	{
+	pub fn color(mut self, offset: usize) -> Result<Self, ()> {
 		self.color = Some(ALLEGRO_VERTEX_ELEMENT {
 			attribute: ALLEGRO_PRIM_COLOR_ATTR,
 			storage: 0,
@@ -466,10 +429,8 @@ impl VertexDeclBuilder
 		Ok(self)
 	}
 
-	pub fn uv(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()>
-	{
-		if storage != VertexAttrStorage::F32_2 && storage != VertexAttrStorage::I16_2
-		{
+	pub fn uv(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()> {
+		if storage != VertexAttrStorage::F32_2 && storage != VertexAttrStorage::I16_2 {
 			return Err(());
 		}
 		self.uv = Some(ALLEGRO_VERTEX_ELEMENT {
@@ -480,10 +441,8 @@ impl VertexDeclBuilder
 		Ok(self)
 	}
 
-	pub fn uv_pixel(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()>
-	{
-		if storage != VertexAttrStorage::F32_2 && storage != VertexAttrStorage::I16_2
-		{
+	pub fn uv_pixel(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()> {
+		if storage != VertexAttrStorage::F32_2 && storage != VertexAttrStorage::I16_2 {
 			return Err(());
 		}
 		self.uv_pixel = Some(ALLEGRO_VERTEX_ELEMENT {
@@ -494,10 +453,8 @@ impl VertexDeclBuilder
 		Ok(self)
 	}
 
-	pub fn user_attr(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()>
-	{
-		if self.user_attrs.len() == ALLEGRO_PRIM_MAX_USER_ATTR as usize
-		{
+	pub fn user_attr(mut self, storage: VertexAttrStorage, offset: usize) -> Result<Self, ()> {
+		if self.user_attrs.len() == ALLEGRO_PRIM_MAX_USER_ATTR as usize {
 			return Err(());
 		}
 		self.user_attrs.push(ALLEGRO_VERTEX_ELEMENT {
@@ -509,41 +466,32 @@ impl VertexDeclBuilder
 	}
 }
 
-pub struct VertexDecl
-{
+pub struct VertexDecl {
 	decl: *mut ALLEGRO_VERTEX_DECL,
 }
 
-impl VertexDecl
-{
-	pub fn new() -> Self
-	{
+impl VertexDecl {
+	pub fn new() -> Self {
 		VertexDecl {
 			decl: ptr::null_mut(),
 		}
 	}
 
-	pub fn from_builder(_: &PrimitivesAddon, builder: &VertexDeclBuilder) -> Self
-	{
+	pub fn from_builder(_: &PrimitivesAddon, builder: &VertexDeclBuilder) -> Self {
 		let mut elements = vec![];
-		if let Some(pos) = builder.pos
-		{
+		if let Some(pos) = builder.pos {
 			elements.push(pos);
 		}
-		if let Some(color) = builder.color
-		{
+		if let Some(color) = builder.color {
 			elements.push(color);
 		}
-		if let Some(uv) = builder.uv
-		{
+		if let Some(uv) = builder.uv {
 			elements.push(uv);
 		}
-		if let Some(uv_pixel) = builder.uv_pixel
-		{
+		if let Some(uv_pixel) = builder.uv_pixel {
 			elements.push(uv_pixel);
 		}
-		for &user_attr in &builder.user_attrs
-		{
+		for &user_attr in &builder.user_attrs {
 			elements.push(user_attr);
 		}
 		elements.push(ALLEGRO_VERTEX_ELEMENT {
@@ -558,53 +506,42 @@ impl VertexDecl
 		}
 	}
 
-	fn get_allegro_decl(&self) -> *const ALLEGRO_VERTEX_DECL
-	{
+	fn get_allegro_decl(&self) -> *const ALLEGRO_VERTEX_DECL {
 		self.decl
 	}
 }
 
-impl Drop for VertexDecl
-{
-	fn drop(&mut self)
-	{
+impl Drop for VertexDecl {
+	fn drop(&mut self) {
 		unsafe {
-			if !self.decl.is_null()
-			{
+			if !self.decl.is_null() {
 				al_destroy_vertex_decl(self.decl);
 			}
 		}
 	}
 }
 
-pub trait VertexSource
-{
+pub trait VertexSource {
 	type VertexType: VertexType;
-	fn get_ptr(&self) -> *const u8
-	{
+	fn get_ptr(&self) -> *const u8 {
 		ptr::null()
 	}
 }
 
-pub unsafe trait VertexType
-{
+pub unsafe trait VertexType {
 	fn get_decl(prim: &PrimitivesAddon) -> VertexDecl;
 }
 
-unsafe impl VertexType for Vertex
-{
-	fn get_decl(_: &PrimitivesAddon) -> VertexDecl
-	{
+unsafe impl VertexType for Vertex {
+	fn get_decl(_: &PrimitivesAddon) -> VertexDecl {
 		VertexDecl::new()
 	}
 }
 
-impl<T: VertexType> VertexSource for [T]
-{
+impl<T: VertexType> VertexSource for [T] {
 	type VertexType = T;
 
-	fn get_ptr(&self) -> *const u8
-	{
+	fn get_ptr(&self) -> *const u8 {
 		self.as_ptr() as *const _
 	}
 }

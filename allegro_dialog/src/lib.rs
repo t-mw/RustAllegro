@@ -28,34 +28,27 @@ flag_type! {
 }
 
 #[derive(Copy, Clone)]
-pub enum MessageBoxResult
-{
+pub enum MessageBoxResult {
 	NoButton,
 	Affirmative,
 	Negatory,
 }
 
-pub struct DialogAddon
-{
+pub struct DialogAddon {
 	_dummy: (),
 }
 
-impl DialogAddon
-{
-	pub fn init(_: &Core) -> Result<DialogAddon, String>
-	{
+impl DialogAddon {
+	pub fn init(_: &Core) -> Result<DialogAddon, String> {
 		use std::sync::Once;
 		static mut RUN_ONCE: Once = Once::new();
 
 		let mut res = Err("The dialog addon already initialized.".into());
 		unsafe {
 			RUN_ONCE.call_once(|| {
-				res = if al_init_native_dialog_addon() != 0
-				{
+				res = if al_init_native_dialog_addon() != 0 {
 					Ok(DialogAddon { _dummy: () })
-				}
-				else
-				{
+				} else {
 					Err("Could not initialize the dialog addon.".into())
 				}
 			})
@@ -63,8 +56,7 @@ impl DialogAddon
 		res
 	}
 
-	pub fn get_version() -> i32
-	{
+	pub fn get_version() -> i32 {
 		unsafe { al_get_allegro_native_dialog_version() as i32 }
 	}
 }
@@ -72,8 +64,7 @@ impl DialogAddon
 pub fn show_native_message_box(
 	display: Option<&Display>, title: &str, heading: &str, text: &str, buttons: Option<&str>,
 	flags: MessageBoxFlags,
-) -> MessageBoxResult
-{
+) -> MessageBoxResult {
 	use libc::c_int;
 	use std::ptr;
 
@@ -83,10 +74,8 @@ pub fn show_native_message_box(
 	let text = CString::new(text.as_bytes()).unwrap();
 
 	let ret = unsafe {
-		match buttons
-		{
-			Some(buttons) =>
-			{
+		match buttons {
+			Some(buttons) => {
 				let buttons = CString::new(buttons.as_bytes()).unwrap();
 				al_show_native_message_box(
 					d,
@@ -108,8 +97,7 @@ pub fn show_native_message_box(
 		}
 	};
 
-	match ret
-	{
+	match ret {
 		1 => MessageBoxResult::Affirmative,
 		2 => MessageBoxResult::Negatory,
 		_ => MessageBoxResult::NoButton,

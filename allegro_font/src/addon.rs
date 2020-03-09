@@ -5,15 +5,12 @@
 use allegro::Core;
 use allegro_font_sys::*;
 
-pub struct FontAddon
-{
+pub struct FontAddon {
 	_dummy: (),
 }
 
-impl FontAddon
-{
-	pub fn init(_: &Core) -> Result<FontAddon, String>
-	{
+impl FontAddon {
+	pub fn init(_: &Core) -> Result<FontAddon, String> {
 		use std::sync::Once;
 		static mut RUN_ONCE: Once = Once::new();
 
@@ -27,8 +24,7 @@ impl FontAddon
 		res
 	}
 
-	pub fn get_version() -> i32
-	{
+	pub fn get_version() -> i32 {
 		unsafe { al_get_allegro_font_version() as i32 }
 	}
 }

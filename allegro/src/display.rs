@@ -50,8 +50,7 @@ flags! {
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum DisplayOption
-{
+pub enum DisplayOption {
 	RedSize = ALLEGRO_RED_SIZE,
 	GreenSize = ALLEGRO_GREEN_SIZE,
 	BlueSize = ALLEGRO_BLUE_SIZE,
@@ -87,8 +86,7 @@ pub enum DisplayOption
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum DisplayOptionImportance
-{
+pub enum DisplayOptionImportance {
 	DontCare = ALLEGRO_DONTCARE,
 	Require = ALLEGRO_REQUIRE,
 	Suggest = ALLEGRO_SUGGEST,
@@ -96,8 +94,7 @@ pub enum DisplayOptionImportance
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum DisplayOrientation
-{
+pub enum DisplayOrientation {
 	DisplayOrientation0Degrees = ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES,
 	DisplayOrientation90Degrees = ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES,
 	DisplayOrientation180Degrees = ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES,
@@ -106,26 +103,20 @@ pub enum DisplayOrientation
 	DisplayOrientationFaceDown = ALLEGRO_DISPLAY_ORIENTATION_FACE_DOWN,
 }
 
-pub struct Display
-{
+pub struct Display {
 	allegro_display: *mut ALLEGRO_DISPLAY,
 	backbuffer: Bitmap,
 	#[cfg(any(allegro_5_2_0, allegro_5_1_0))]
 	shaders: Vec<Arc<Shader>>,
 }
 
-impl Display
-{
-	pub fn new(_: &Core, w: i32, h: i32) -> Result<Display, ()>
-	{
+impl Display {
+	pub fn new(_: &Core, w: i32, h: i32) -> Result<Display, ()> {
 		unsafe {
 			let d = al_create_display(w as c_int, h as c_int);
-			if d.is_null()
-			{
+			if d.is_null() {
 				Err(())
-			}
-			else
-			{
+			} else {
 				update_thread_state();
 				let backbuffer = Bitmap::wrap(al_get_backbuffer(d), false);
 				Ok(Display::new_impl(d, backbuffer))
@@ -134,8 +125,7 @@ impl Display
 	}
 
 	#[cfg(not(any(allegro_5_2_0, allegro_5_1_0)))]
-	fn new_impl(d: *mut ALLEGRO_DISPLAY, backbuffer: Bitmap) -> Display
-	{
+	fn new_impl(d: *mut ALLEGRO_DISPLAY, backbuffer: Bitmap) -> Display {
 		Display {
 			allegro_display: d,
 			backbuffer: backbuffer,
@@ -143,8 +133,7 @@ impl Display
 	}
 
 	#[cfg(any(allegro_5_2_0, allegro_5_1_0))]
-	fn new_impl(d: *mut ALLEGRO_DISPLAY, backbuffer: Bitmap) -> Display
-	{
+	fn new_impl(d: *mut ALLEGRO_DISPLAY, backbuffer: Bitmap) -> Display {
 		Display {
 			allegro_display: d,
 			backbuffer: backbuffer,
@@ -152,78 +141,61 @@ impl Display
 		}
 	}
 
-	pub fn get_width(&self) -> i32
-	{
+	pub fn get_width(&self) -> i32 {
 		unsafe { al_get_display_width(self.allegro_display) as i32 }
 	}
 
-	pub fn get_height(&self) -> i32
-	{
+	pub fn get_height(&self) -> i32 {
 		unsafe { al_get_display_height(self.allegro_display) as i32 }
 	}
 
-	pub fn get_format(&self) -> PixelFormat
-	{
+	pub fn get_format(&self) -> PixelFormat {
 		unsafe { mem::transmute(al_get_display_format(self.allegro_display) as u32) }
 	}
 
-	pub fn get_refresh_rate(&self) -> i32
-	{
+	pub fn get_refresh_rate(&self) -> i32 {
 		unsafe { al_get_display_refresh_rate(self.allegro_display) as i32 }
 	}
 
-	pub fn get_flags(&self) -> DisplayFlags
-	{
+	pub fn get_flags(&self) -> DisplayFlags {
 		unsafe { mem::transmute(al_get_display_flags(self.allegro_display)) }
 	}
 
-	pub fn set_flag(&self, flag: DisplayFlags, onoff: bool) -> bool
-	{
+	pub fn set_flag(&self, flag: DisplayFlags, onoff: bool) -> bool {
 		unsafe { al_set_display_flag(self.allegro_display, flag.get(), onoff as u8) != 0 }
 	}
 
-	pub fn get_backbuffer(&self) -> &Bitmap
-	{
+	pub fn get_backbuffer(&self) -> &Bitmap {
 		&self.backbuffer
 	}
 
-	pub fn acknowledge_resize(&self) -> Result<(), ()>
-	{
+	pub fn acknowledge_resize(&self) -> Result<(), ()> {
 		unsafe {
-			if al_acknowledge_resize(self.allegro_display) != 0
-			{
+			if al_acknowledge_resize(self.allegro_display) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn resize(&self, w: i32, h: i32) -> Result<(), ()>
-	{
+	pub fn resize(&self, w: i32, h: i32) -> Result<(), ()> {
 		unsafe {
-			if al_resize_display(self.allegro_display, w as c_int, h as c_int) != 0
-			{
+			if al_resize_display(self.allegro_display, w as c_int, h as c_int) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn set_icon<T: BitmapLike>(&self, icon: &T)
-	{
+	pub fn set_icon<T: BitmapLike>(&self, icon: &T) {
 		unsafe {
 			al_set_display_icon(self.allegro_display, icon.get_allegro_bitmap());
 		}
 	}
 
-	pub fn set_icons<'l, U: Iterator<Item = &'l (dyn BitmapLike + 'l)>>(&self, icons: U)
-	{
+	pub fn set_icons<'l, U: Iterator<Item = &'l (dyn BitmapLike + 'l)>>(&self, icons: U) {
 		let mut c_icons: Vec<_> = icons.map(|b| b.get_allegro_bitmap()).collect();
 		unsafe {
 			al_set_display_icons(
@@ -234,15 +206,13 @@ impl Display
 		}
 	}
 
-	pub fn set_window_position(&self, x: i32, y: i32)
-	{
+	pub fn set_window_position(&self, x: i32, y: i32) {
 		unsafe {
 			al_set_window_position(self.allegro_display, x as c_int, y as c_int);
 		}
 	}
 
-	pub fn get_window_position(&self) -> (i32, i32)
-	{
+	pub fn get_window_position(&self) -> (i32, i32) {
 		unsafe {
 			let mut x = 0 as c_int;
 			let mut y = 0 as c_int;
@@ -251,31 +221,26 @@ impl Display
 		}
 	}
 
-	pub fn set_window_title(&self, title: &str)
-	{
+	pub fn set_window_title(&self, title: &str) {
 		let title = CString::new(title.as_bytes()).unwrap();
 		unsafe {
 			al_set_window_title(self.allegro_display, title.as_ptr());
 		}
 	}
 
-	pub fn get_option(&self, option: DisplayOption) -> i32
-	{
+	pub fn get_option(&self, option: DisplayOption) -> i32 {
 		unsafe { al_get_display_option(self.allegro_display, option as c_int) as i32 }
 	}
 
-	pub fn convert_bitmap<T: BitmapLike>(&self, bmp: &T) -> Result<Bitmap, ()>
-	{
+	pub fn convert_bitmap<T: BitmapLike>(&self, bmp: &T) -> Result<Bitmap, ()> {
 		unsafe { Bitmap::clone_and_wrap(bmp.get_allegro_bitmap()) }
 	}
 
-	pub fn get_event_source(&self) -> EventSource
-	{
+	pub fn get_event_source(&self) -> EventSource {
 		unsafe { EventSource::wrap(al_get_display_event_source(self.allegro_display)) }
 	}
 
-	pub fn get_allegro_display(&self) -> *mut ALLEGRO_DISPLAY
-	{
+	pub fn get_allegro_display(&self) -> *mut ALLEGRO_DISPLAY {
 		self.allegro_display
 	}
 
@@ -284,8 +249,7 @@ impl Display
 	/// Note that display destruction will panic if a strong reference is held
 	/// to a shader at that time.
 	#[cfg(any(allegro_5_2_0, allegro_5_1_0))]
-	pub fn create_shader(&mut self, platform: ShaderPlatform) -> Result<Weak<Shader>, ()>
-	{
+	pub fn create_shader(&mut self, platform: ShaderPlatform) -> Result<Weak<Shader>, ()> {
 		let shader;
 		unsafe {
 			let old_target = al_get_target_bitmap();
@@ -293,26 +257,20 @@ impl Display
 			shader = al_create_shader(platform as ALLEGRO_SHADER_PLATFORM);
 			al_set_target_bitmap(old_target);
 		};
-		if !shader.is_null()
-		{
+		if !shader.is_null() {
 			let shader = unsafe { Arc::new(Shader::wrap(shader)) };
 			let ret = Arc::downgrade(&shader);
 			self.shaders.push(shader);
 			Ok(ret)
-		}
-		else
-		{
+		} else {
 			Err(())
 		}
 	}
 
 	#[cfg(any(allegro_5_2_0, allegro_5_1_0))]
-	fn has_outstanding_shaders(&self) -> bool
-	{
-		for shader in &self.shaders
-		{
-			if Arc::strong_count(&shader) != 1
-			{
+	fn has_outstanding_shaders(&self) -> bool {
+		for shader in &self.shaders {
+			if Arc::strong_count(&shader) != 1 {
 				return true;
 			}
 		}
@@ -320,8 +278,7 @@ impl Display
 	}
 
 	#[cfg(not(any(allegro_5_2_0, allegro_5_1_0)))]
-	fn has_outstanding_shaders(&self) -> bool
-	{
+	fn has_outstanding_shaders(&self) -> bool {
 		false
 	}
 }
@@ -329,12 +286,9 @@ impl Display
 unsafe impl Send for Display {}
 unsafe impl Sync for Display {}
 
-impl Drop for Display
-{
-	fn drop(&mut self)
-	{
-		if self.has_outstanding_shaders()
-		{
+impl Drop for Display {
+	fn drop(&mut self) {
+		if self.has_outstanding_shaders() {
 			panic!("Display has outstanding shaders!");
 		}
 		unsafe {

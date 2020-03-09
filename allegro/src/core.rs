@@ -22,8 +22,7 @@ use std::ptr;
 use std::thread;
 use transformations::Transform;
 
-struct ThreadState
-{
+struct ThreadState {
 	id: thread::ThreadId,
 	cur_bitmap: *mut ALLEGRO_BITMAP,
 	cur_display: *mut ALLEGRO_DISPLAY,
@@ -35,28 +34,22 @@ lazy_static! {
 	static ref THREAD_STATE: Mutex<Vec<ThreadState>> = Mutex::new(vec![]);
 }
 
-unsafe fn get_real_bitmap(bmp: *mut ALLEGRO_BITMAP) -> *mut ALLEGRO_BITMAP
-{
-	if bmp.is_null() || al_is_sub_bitmap(bmp) == 0
-	{
+unsafe fn get_real_bitmap(bmp: *mut ALLEGRO_BITMAP) -> *mut ALLEGRO_BITMAP {
+	if bmp.is_null() || al_is_sub_bitmap(bmp) == 0 {
 		bmp
-	}
-	else
-	{
+	} else {
 		al_get_parent_bitmap(bmp)
 	}
 }
 
-pub(crate) unsafe fn update_thread_state()
-{
+pub(crate) unsafe fn update_thread_state() {
 	let cur_id = thread::current().id();
 	let mut thread_state = THREAD_STATE.lock().unwrap();
 	let pos = (*thread_state)
 		.iter()
 		.position(|s| s.id == cur_id)
 		.unwrap_or(thread_state.len());
-	if pos >= thread_state.len()
-	{
+	if pos >= thread_state.len() {
 		thread_state.push(ThreadState {
 			id: cur_id,
 			cur_bitmap: ptr::null_mut(),
@@ -67,10 +60,8 @@ pub(crate) unsafe fn update_thread_state()
 	thread_state[pos].cur_display = al_get_current_display();
 }
 
-pub(crate) unsafe fn check_bitmap_targeted_elsewhere(bmp: *mut ALLEGRO_BITMAP, action: &str)
-{
-	if bmp.is_null()
-	{
+pub(crate) unsafe fn check_bitmap_targeted_elsewhere(bmp: *mut ALLEGRO_BITMAP, action: &str) {
+	if bmp.is_null() {
 		return;
 	}
 	let cur_id = thread::current().id();
@@ -87,10 +78,8 @@ pub(crate) unsafe fn check_bitmap_targeted_elsewhere(bmp: *mut ALLEGRO_BITMAP, a
 	}
 }
 
-pub(crate) unsafe fn check_display_targeted_elsewhere(disp: *mut ALLEGRO_DISPLAY, action: &str)
-{
-	if disp.is_null()
-	{
+pub(crate) unsafe fn check_display_targeted_elsewhere(disp: *mut ALLEGRO_DISPLAY, action: &str) {
+	if disp.is_null() {
 		return;
 	}
 	let cur_id = thread::current().id();
@@ -106,11 +95,9 @@ pub(crate) unsafe fn check_display_targeted_elsewhere(disp: *mut ALLEGRO_DISPLAY
 	}
 }
 
-fn check_valid_target_bitmap()
-{
+fn check_valid_target_bitmap() {
 	unsafe {
-		if al_get_target_bitmap().is_null()
-		{
+		if al_get_target_bitmap().is_null() {
 			panic!("Target bitmap is null!");
 		}
 	}
@@ -127,8 +114,7 @@ flag_type! {
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum BlendMode
-{
+pub enum BlendMode {
 	Zero = ALLEGRO_ZERO,
 	One = ALLEGRO_ONE,
 	Alpha = ALLEGRO_ALPHA,
@@ -143,8 +129,7 @@ pub enum BlendMode
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum BlendOperation
-{
+pub enum BlendOperation {
 	Add = ALLEGRO_ADD,
 	SrcMinusDest = ALLEGRO_SRC_MINUS_DEST,
 	DestMinusSrc = ALLEGRO_DEST_MINUS_SRC,
@@ -152,8 +137,7 @@ pub enum BlendOperation
 
 /// Extents of a monitor.
 #[derive(Copy, Clone, Debug)]
-pub struct MonitorInfo
-{
+pub struct MonitorInfo {
 	pub x1: i32,
 	pub y1: i32,
 	pub x2: i32,
@@ -162,8 +146,7 @@ pub struct MonitorInfo
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum DepthFunction
-{
+pub enum DepthFunction {
 	Never = ALLEGRO_RENDER_NEVER as u32,
 	Always = ALLEGRO_RENDER_ALWAYS as u32,
 	Less = ALLEGRO_RENDER_LESS as u32,
@@ -175,22 +158,18 @@ pub enum DepthFunction
 }
 
 /// Type through which you'll be doing most your interaction with Allegro.
-pub struct Core
-{
+pub struct Core {
 	system_config: Config,
 }
 
-impl Core
-{
+impl Core {
 	/// This must be called on the main thread.
-	pub fn init() -> Result<Core, String>
-	{
+	pub fn init() -> Result<Core, String> {
 		Core::init_with_config(&Config::new())
 	}
 
 	/// Initializes Allegro while merging in the system_config into the system configuration.
-	pub fn init_with_config(system_config: &Config) -> Result<Core, String>
-	{
+	pub fn init_with_config(system_config: &Config) -> Result<Core, String> {
 		use std::sync::Once;
 		static mut RUN_ONCE: Once = Once::new();
 
@@ -222,24 +201,20 @@ impl Core
 	}
 
 	/// Returns the system config.
-	pub fn get_system_config(&self) -> &Config
-	{
+	pub fn get_system_config(&self) -> &Config {
 		&self.system_config
 	}
 
 	/// Returns the system config.
-	pub fn get_system_config_mut(&mut self) -> &mut Config
-	{
+	pub fn get_system_config_mut(&mut self) -> &mut Config {
 		&mut self.system_config
 	}
 
-	pub fn get_num_video_adapters(&self) -> i32
-	{
+	pub fn get_num_video_adapters(&self) -> i32 {
 		unsafe { al_get_num_video_adapters() as i32 }
 	}
 
-	pub fn get_monitor_info(&self, adapter: i32) -> Result<MonitorInfo, ()>
-	{
+	pub fn get_monitor_info(&self, adapter: i32) -> Result<MonitorInfo, ()> {
 		unsafe {
 			let mut c_info = ALLEGRO_MONITOR_INFO {
 				x1: 0,
@@ -247,297 +222,224 @@ impl Core
 				x2: 0,
 				y2: 0,
 			};
-			if al_get_monitor_info(adapter as c_int, &mut c_info as *mut _) != 0
-			{
+			if al_get_monitor_info(adapter as c_int, &mut c_info as *mut _) != 0 {
 				Ok(MonitorInfo {
 					x1: c_info.x1 as i32,
 					y1: c_info.y1 as i32,
 					x2: c_info.x2 as i32,
 					y2: c_info.y2 as i32,
 				})
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn rest(&self, seconds: f64)
-	{
+	pub fn rest(&self, seconds: f64) {
 		unsafe {
 			al_rest(seconds as c_double);
 		}
 	}
 
-	pub fn get_time(&self) -> f64
-	{
+	pub fn get_time(&self) -> f64 {
 		unsafe { al_get_time() as f64 }
 	}
 
-	pub fn install_keyboard(&self) -> Result<(), ()>
-	{
+	pub fn install_keyboard(&self) -> Result<(), ()> {
 		unsafe {
-			if al_install_keyboard() != 0
-			{
+			if al_install_keyboard() != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn is_keyboard_installed(&self) -> bool
-	{
+	pub fn is_keyboard_installed(&self) -> bool {
 		unsafe { al_is_keyboard_installed() != 0 }
 	}
 
-	pub fn get_keyboard_event_source(&self) -> Option<EventSource>
-	{
-		if self.is_keyboard_installed()
-		{
+	pub fn get_keyboard_event_source(&self) -> Option<EventSource> {
+		if self.is_keyboard_installed() {
 			unsafe { Some(EventSource::wrap(al_get_keyboard_event_source())) }
-		}
-		else
-		{
+		} else {
 			None
 		}
 	}
 
-	pub fn set_keyboard_leds(&self, leds: KeyModifier) -> Result<(), ()>
-	{
+	pub fn set_keyboard_leds(&self, leds: KeyModifier) -> Result<(), ()> {
 		assert!(self.is_keyboard_installed());
 		unsafe {
-			if al_set_keyboard_leds(leds.get() as c_int) != 0
-			{
+			if al_set_keyboard_leds(leds.get() as c_int) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn keycode_to_name(&self, k: KeyCode) -> String
-	{
+	pub fn keycode_to_name(&self, k: KeyCode) -> String {
 		assert!(self.is_keyboard_installed());
 		unsafe { from_c_str(al_keycode_to_name(k as c_int)) }
 	}
 
-	pub fn install_mouse(&self) -> Result<(), ()>
-	{
+	pub fn install_mouse(&self) -> Result<(), ()> {
 		unsafe {
-			if al_install_mouse() != 0
-			{
+			if al_install_mouse() != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn is_mouse_installed(&self) -> bool
-	{
+	pub fn is_mouse_installed(&self) -> bool {
 		unsafe { al_is_mouse_installed() != 0 }
 	}
 
-	pub fn get_mouse_event_source(&self) -> Option<EventSource>
-	{
-		if self.is_mouse_installed()
-		{
+	pub fn get_mouse_event_source(&self) -> Option<EventSource> {
+		if self.is_mouse_installed() {
 			unsafe { Some(EventSource::wrap(al_get_mouse_event_source())) }
-		}
-		else
-		{
+		} else {
 			None
 		}
 	}
 
-	pub fn install_joystick(&self) -> Result<(), ()>
-	{
+	pub fn install_joystick(&self) -> Result<(), ()> {
 		unsafe {
-			if al_install_joystick() != 0
-			{
+			if al_install_joystick() != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn is_joystick_installed(&self) -> bool
-	{
+	pub fn is_joystick_installed(&self) -> bool {
 		unsafe { al_is_joystick_installed() != 0 }
 	}
 
-	pub fn get_joystick_event_source(&self) -> Option<EventSource>
-	{
-		if self.is_joystick_installed()
-		{
+	pub fn get_joystick_event_source(&self) -> Option<EventSource> {
+		if self.is_joystick_installed() {
 			unsafe { Some(EventSource::wrap(al_get_joystick_event_source())) }
-		}
-		else
-		{
+		} else {
 			None
 		}
 	}
 
-	pub fn reconfigure_joysticks(&self) -> Result<(), ()>
-	{
+	pub fn reconfigure_joysticks(&self) -> Result<(), ()> {
 		assert!(self.is_joystick_installed());
 		unsafe {
-			if al_reconfigure_joysticks() != 0
-			{
+			if al_reconfigure_joysticks() != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn get_num_joysticks(&self) -> i32
-	{
+	pub fn get_num_joysticks(&self) -> i32 {
 		assert!(self.is_joystick_installed());
 		unsafe { al_get_num_joysticks() as i32 }
 	}
 
-	pub fn get_mouse_num_buttons(&self) -> u32
-	{
+	pub fn get_mouse_num_buttons(&self) -> u32 {
 		assert!(self.is_mouse_installed());
 		unsafe { al_get_mouse_num_buttons() as u32 }
 	}
 
-	pub fn get_mouse_num_axes(&self) -> u32
-	{
+	pub fn get_mouse_num_axes(&self) -> u32 {
 		assert!(self.is_mouse_installed());
 		unsafe { al_get_mouse_num_axes() as u32 }
 	}
 
-	pub fn set_mouse_xy(&self, display: &Display, x: i32, y: i32) -> Result<(), ()>
-	{
+	pub fn set_mouse_xy(&self, display: &Display, x: i32, y: i32) -> Result<(), ()> {
 		assert!(self.is_mouse_installed());
 		unsafe {
-			if al_set_mouse_xy(display.get_allegro_display(), x as c_int, y as c_int) != 0
-			{
+			if al_set_mouse_xy(display.get_allegro_display(), x as c_int, y as c_int) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn set_mouse_z(&self, z: i32) -> Result<(), ()>
-	{
+	pub fn set_mouse_z(&self, z: i32) -> Result<(), ()> {
 		assert!(self.is_mouse_installed());
 		unsafe {
-			if al_set_mouse_z(z as c_int) != 0
-			{
+			if al_set_mouse_z(z as c_int) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn set_mouse_w(&self, w: i32) -> Result<(), ()>
-	{
+	pub fn set_mouse_w(&self, w: i32) -> Result<(), ()> {
 		assert!(self.is_mouse_installed());
 		unsafe {
-			if al_set_mouse_w(w as c_int) != 0
-			{
+			if al_set_mouse_w(w as c_int) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn set_mouse_axis(&self, axis: i32, value: i32) -> Result<(), ()>
-	{
+	pub fn set_mouse_axis(&self, axis: i32, value: i32) -> Result<(), ()> {
 		assert!(self.is_mouse_installed());
 		unsafe {
-			if al_set_mouse_axis(axis as c_int, value as c_int) != 0
-			{
+			if al_set_mouse_axis(axis as c_int, value as c_int) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn grab_mouse(&self, display: &Display) -> Result<(), ()>
-	{
+	pub fn grab_mouse(&self, display: &Display) -> Result<(), ()> {
 		assert!(self.is_mouse_installed());
 		unsafe {
-			if al_grab_mouse(display.get_allegro_display()) != 0
-			{
+			if al_grab_mouse(display.get_allegro_display()) != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn ungrab_mouse(&self) -> Result<(), ()>
-	{
+	pub fn ungrab_mouse(&self) -> Result<(), ()> {
 		assert!(self.is_mouse_installed());
 		unsafe {
-			if al_ungrab_mouse() != 0
-			{
+			if al_ungrab_mouse() != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn set_new_bitmap_flags(&self, flags: BitmapFlags)
-	{
+	pub fn set_new_bitmap_flags(&self, flags: BitmapFlags) {
 		unsafe {
 			al_set_new_bitmap_flags(flags.get() as c_int);
 		}
 	}
 
-	pub fn get_new_bitmap_flags(&self) -> BitmapFlags
-	{
+	pub fn get_new_bitmap_flags(&self) -> BitmapFlags {
 		unsafe { mem::transmute(al_get_new_bitmap_flags() as u32) }
 	}
 
-	pub fn set_new_bitmap_format(&self, format: PixelFormat)
-	{
+	pub fn set_new_bitmap_format(&self, format: PixelFormat) {
 		unsafe {
 			al_set_new_bitmap_format(format as c_int);
 		}
 	}
 
-	pub fn get_new_bitmap_format(&self) -> PixelFormat
-	{
+	pub fn get_new_bitmap_format(&self) -> PixelFormat {
 		unsafe { mem::transmute(al_get_new_bitmap_format() as u32) }
 	}
 
-	pub fn set_target_bitmap<T: BitmapLike>(&self, bmp: Option<&T>)
-	{
+	pub fn set_target_bitmap<T: BitmapLike>(&self, bmp: Option<&T>) {
 		unsafe {
 			al_set_target_bitmap(
 				bmp.map(|b| b.get_allegro_bitmap())
@@ -549,8 +451,7 @@ impl Core
 		}
 	}
 
-	pub fn clear_to_color(&self, color: Color)
-	{
+	pub fn clear_to_color(&self, color: Color) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_clear_to_color(color.get_allegro_color());
@@ -558,32 +459,28 @@ impl Core
 	}
 
 	#[cfg(any(allegro_5_2_0, allegro_5_1_2))]
-	pub fn clear_depth_buffer(&self, z: f32)
-	{
+	pub fn clear_depth_buffer(&self, z: f32) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_clear_depth_buffer(z);
 		}
 	}
 
-	pub fn draw_pixel(&self, x: f32, y: f32, color: Color)
-	{
+	pub fn draw_pixel(&self, x: f32, y: f32, color: Color) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_pixel(x as c_float, y as c_float, color.get_allegro_color());
 		}
 	}
 
-	pub fn put_pixel(&self, x: i32, y: i32, color: Color)
-	{
+	pub fn put_pixel(&self, x: i32, y: i32, color: Color) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_put_pixel(x as c_int, y as c_int, color.get_allegro_color());
 		}
 	}
 
-	pub fn put_blended_pixel(&self, x: i32, y: i32, color: Color)
-	{
+	pub fn put_blended_pixel(&self, x: i32, y: i32, color: Color) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_put_blended_pixel(x as c_int, y as c_int, color.get_allegro_color());
@@ -592,8 +489,7 @@ impl Core
 
 	pub fn draw_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, dx: f32, dy: f32, flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_bitmap(
@@ -608,8 +504,7 @@ impl Core
 	pub fn draw_bitmap_region<T: BitmapLike>(
 		&self, bitmap: &T, sx: f32, sy: f32, sw: f32, sh: f32, dx: f32, dy: f32,
 		flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_bitmap_region(
@@ -628,8 +523,7 @@ impl Core
 	pub fn draw_scaled_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, sx: f32, sy: f32, sw: f32, sh: f32, dx: f32, dy: f32, dw: f32, dh: f32,
 		flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_scaled_bitmap(
@@ -650,8 +544,7 @@ impl Core
 	pub fn draw_rotated_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, cx: f32, cy: f32, dx: f32, dy: f32, angle: f32,
 		flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_rotated_bitmap(
@@ -669,8 +562,7 @@ impl Core
 	pub fn draw_scaled_rotated_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, cx: f32, cy: f32, dx: f32, dy: f32, xscale: f32, yscale: f32,
 		angle: f32, flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_scaled_rotated_bitmap(
@@ -689,8 +581,7 @@ impl Core
 
 	pub fn draw_tinted_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, tint: Color, dx: f32, dy: f32, flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_tinted_bitmap(
@@ -706,8 +597,7 @@ impl Core
 	pub fn draw_tinted_bitmap_region<T: BitmapLike>(
 		&self, bitmap: &T, tint: Color, sx: f32, sy: f32, sw: f32, sh: f32, dx: f32, dy: f32,
 		flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_tinted_bitmap_region(
@@ -727,8 +617,7 @@ impl Core
 	pub fn draw_tinted_scaled_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, tint: Color, sx: f32, sy: f32, sw: f32, sh: f32, dx: f32, dy: f32,
 		dw: f32, dh: f32, flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_tinted_scaled_bitmap(
@@ -750,8 +639,7 @@ impl Core
 	pub fn draw_tinted_rotated_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, tint: Color, cx: f32, cy: f32, dx: f32, dy: f32, angle: f32,
 		flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_tinted_rotated_bitmap(
@@ -770,8 +658,7 @@ impl Core
 	pub fn draw_tinted_scaled_rotated_bitmap<T: BitmapLike>(
 		&self, bitmap: &T, tint: Color, cx: f32, cy: f32, dx: f32, dy: f32, xscale: f32,
 		yscale: f32, angle: f32, flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_tinted_scaled_rotated_bitmap(
@@ -792,8 +679,7 @@ impl Core
 	pub fn draw_tinted_scaled_rotated_bitmap_region<T: BitmapLike>(
 		&self, bitmap: &T, sx: f32, sy: f32, sw: f32, sh: f32, tint: Color, cx: f32, cy: f32,
 		dx: f32, dy: f32, xscale: f32, yscale: f32, angle: f32, flags: BitmapDrawingFlags,
-	)
-	{
+	) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_draw_tinted_scaled_rotated_bitmap_region(
@@ -815,24 +701,21 @@ impl Core
 		}
 	}
 
-	pub fn set_clipping_rectangle(&self, x: i32, y: i32, width: i32, height: i32)
-	{
+	pub fn set_clipping_rectangle(&self, x: i32, y: i32, width: i32, height: i32) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_set_clipping_rectangle(x as c_int, y as c_int, width as c_int, height as c_int);
 		}
 	}
 
-	pub fn reset_clipping_rectangle(&self)
-	{
+	pub fn reset_clipping_rectangle(&self) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_reset_clipping_rectangle();
 		}
 	}
 
-	pub fn get_clipping_rectangle(&self) -> (i32, i32, i32, i32)
-	{
+	pub fn get_clipping_rectangle(&self) -> (i32, i32, i32, i32) {
 		check_valid_target_bitmap();
 		unsafe {
 			let mut x: c_int = 0;
@@ -844,51 +727,43 @@ impl Core
 		}
 	}
 
-	pub fn set_new_display_flags(&self, flags: DisplayFlags)
-	{
+	pub fn set_new_display_flags(&self, flags: DisplayFlags) {
 		unsafe {
 			al_set_new_display_flags(flags.get() as c_int);
 		}
 	}
 
-	pub fn get_new_display_flags(&self) -> DisplayFlags
-	{
+	pub fn get_new_display_flags(&self) -> DisplayFlags {
 		unsafe { mem::transmute(al_get_new_display_flags()) }
 	}
 
-	pub fn set_new_display_refresh_rate(&self, rate: i32)
-	{
+	pub fn set_new_display_refresh_rate(&self, rate: i32) {
 		unsafe {
 			al_set_new_display_refresh_rate(rate as c_int);
 		}
 	}
 
-	pub fn get_new_display_refresh_rate(&self) -> i32
-	{
+	pub fn get_new_display_refresh_rate(&self) -> i32 {
 		unsafe { al_get_new_display_refresh_rate() as i32 }
 	}
 
-	pub fn set_new_display_adapter(&self, adapter: i32)
-	{
+	pub fn set_new_display_adapter(&self, adapter: i32) {
 		unsafe {
 			al_set_new_display_adapter(adapter as c_int);
 		}
 	}
 
-	pub fn get_new_display_adapter(&self) -> i32
-	{
+	pub fn get_new_display_adapter(&self) -> i32 {
 		unsafe { al_get_new_display_adapter() as i32 }
 	}
 
-	pub fn set_new_window_position(&self, x: i32, y: i32)
-	{
+	pub fn set_new_window_position(&self, x: i32, y: i32) {
 		unsafe {
 			al_set_new_window_position(x as c_int, y as c_int);
 		}
 	}
 
-	pub fn get_new_window_position(&self) -> (i32, i32)
-	{
+	pub fn get_new_window_position(&self) -> (i32, i32) {
 		unsafe {
 			use std::mem::MaybeUninit;
 
@@ -899,8 +774,7 @@ impl Core
 		}
 	}
 
-	pub fn reset_new_display_options(&self)
-	{
+	pub fn reset_new_display_options(&self) {
 		unsafe {
 			al_reset_new_display_options();
 		}
@@ -908,15 +782,13 @@ impl Core
 
 	pub fn set_new_display_option(
 		&self, option: DisplayOption, value: i32, importance: DisplayOptionImportance,
-	)
-	{
+	) {
 		unsafe {
 			al_set_new_display_option(option as c_int, value as c_int, importance as c_int);
 		}
 	}
 
-	pub fn get_new_display_option(&self, option: DisplayOption) -> (i32, DisplayOptionImportance)
-	{
+	pub fn get_new_display_option(&self, option: DisplayOption) -> (i32, DisplayOptionImportance) {
 		unsafe {
 			use std::mem::MaybeUninit;
 
@@ -927,15 +799,13 @@ impl Core
 		}
 	}
 
-	pub fn get_current_transform(&self) -> Transform
-	{
+	pub fn get_current_transform(&self) -> Transform {
 		check_valid_target_bitmap();
 		let t = unsafe { al_get_current_transform() };
 		unsafe { Transform::wrap(*t) }
 	}
 
-	pub fn use_transform(&self, trans: &Transform)
-	{
+	pub fn use_transform(&self, trans: &Transform) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_use_transform(&trans.get_allegro_transform());
@@ -943,8 +813,7 @@ impl Core
 	}
 
 	#[cfg(any(allegro_5_2_0, allegro_5_1_9))]
-	pub fn use_projection_transform(&self, trans: &Transform)
-	{
+	pub fn use_projection_transform(&self, trans: &Transform) {
 		check_valid_target_bitmap();
 		unsafe {
 			al_use_projection_transform(&trans.get_allegro_transform());
@@ -954,25 +823,18 @@ impl Core
 	/// Set the shader as current for the current bitmap. Pass None to stop using this shader.
 	/// Returns an error if the shader isn't compatible with the bitmap.
 	#[cfg(any(allegro_5_2_0, allegro_5_1_6))]
-	pub fn use_shader(&self, shader: Option<&Shader>) -> Result<(), ()>
-	{
+	pub fn use_shader(&self, shader: Option<&Shader>) -> Result<(), ()> {
 		check_valid_target_bitmap();
-		match shader
-		{
-			Some(shader) =>
-			{
+		match shader {
+			Some(shader) => {
 				let ret = unsafe { al_use_shader(shader.get_allegro_shader()) };
-				if ret != 0
-				{
+				if ret != 0 {
 					Ok(())
-				}
-				else
-				{
+				} else {
 					Err(())
 				}
 			}
-			None =>
-			{
+			None => {
 				unsafe {
 					al_use_shader(ptr::null_mut());
 				}
@@ -985,61 +847,49 @@ impl Core
 	#[cfg(any(allegro_5_2_0, allegro_5_1_6))]
 	pub fn get_default_shader_source(
 		&self, platform: ShaderPlatform, shader_type: ShaderType,
-	) -> Option<String>
-	{
+	) -> Option<String> {
 		unsafe {
 			let src = al_get_default_shader_source(
 				platform as ALLEGRO_SHADER_PLATFORM,
 				shader_type as ALLEGRO_SHADER_TYPE,
 			);
-			if src.is_null()
-			{
+			if src.is_null() {
 				None
-			}
-			else
-			{
+			} else {
 				Some(CStr::from_ptr(src).to_string_lossy().into_owned())
 			}
 		}
 	}
 
-	pub fn flip_display(&self)
-	{
+	pub fn flip_display(&self) {
 		unsafe {
 			al_flip_display();
 		}
 	}
 
-	pub fn update_display_region(&self, x: i32, y: i32, width: i32, height: i32)
-	{
+	pub fn update_display_region(&self, x: i32, y: i32, width: i32, height: i32) {
 		unsafe {
 			al_update_display_region(x as c_int, y as c_int, width as c_int, height as c_int);
 		}
 	}
 
-	pub fn wait_for_vsync(&self) -> Result<(), ()>
-	{
+	pub fn wait_for_vsync(&self) -> Result<(), ()> {
 		unsafe {
-			if al_wait_for_vsync() != 0
-			{
+			if al_wait_for_vsync() != 0 {
 				Ok(())
-			}
-			else
-			{
+			} else {
 				Err(())
 			}
 		}
 	}
 
-	pub fn hold_bitmap_drawing(&self, hold: bool)
-	{
+	pub fn hold_bitmap_drawing(&self, hold: bool) {
 		unsafe {
 			al_hold_bitmap_drawing(hold as c_bool);
 		}
 	}
 
-	pub fn is_bitmap_drawing_held(&self) -> bool
-	{
+	pub fn is_bitmap_drawing_held(&self) -> bool {
 		unsafe { al_is_bitmap_drawing_held() != 0 }
 	}
 
@@ -1049,18 +899,14 @@ impl Core
 	#[cfg(any(allegro_5_2_0, allegro_5_1_0))]
 	pub fn set_shader_sampler<T: BitmapLike>(
 		&mut self, name: &str, bmp: &T, unit: i32,
-	) -> Result<(), ()>
-	{
+	) -> Result<(), ()> {
 		let c_name = CString::new(name.as_bytes()).unwrap();
 		let ret = unsafe {
 			al_set_shader_sampler(c_name.as_ptr(), bmp.get_allegro_bitmap(), unit as c_int) != 0
 		};
-		if ret
-		{
+		if ret {
 			Ok(())
-		}
-		else
-		{
+		} else {
 			Err(())
 		}
 	}
@@ -1069,32 +915,26 @@ impl Core
 	#[cfg(any(allegro_5_2_0, allegro_5_1_0))]
 	pub fn set_shader_uniform<T: ShaderUniform + ?Sized>(
 		&self, name: &str, val: &T,
-	) -> Result<(), ()>
-	{
+	) -> Result<(), ()> {
 		unsafe { val.set_self_for_shader(name) }
 	}
 
 	/// Sets a shader uniform to a value.
 	#[cfg(any(allegro_5_2_0, allegro_5_1_0))]
-	pub fn set_shader_transform(&self, name: &str, val: &Transform) -> Result<(), ()>
-	{
+	pub fn set_shader_transform(&self, name: &str, val: &Transform) -> Result<(), ()> {
 		let ret = unsafe {
 			let name = CString::new(name.as_bytes()).unwrap();
 			al_set_shader_matrix(name.as_ptr(), &val.get_allegro_transform())
 		};
-		if ret != 0
-		{
+		if ret != 0 {
 			Ok(())
-		}
-		else
-		{
+		} else {
 			Err(())
 		}
 	}
 
 	/// Set blender options.
-	pub fn set_blender(&self, op: BlendOperation, source: BlendMode, dest: BlendMode)
-	{
+	pub fn set_blender(&self, op: BlendOperation, source: BlendMode, dest: BlendMode) {
 		unsafe {
 			al_set_blender(op as c_int, source as c_int, dest as c_int);
 		}
@@ -1104,8 +944,7 @@ impl Core
 	pub fn set_separate_blender(
 		&self, op: BlendOperation, source: BlendMode, dest: BlendMode, alpha_op: BlendOperation,
 		alpha_source: BlendMode, alpha_dest: BlendMode,
-	)
-	{
+	) {
 		unsafe {
 			al_set_separate_blender(
 				op as c_int,
@@ -1118,17 +957,13 @@ impl Core
 		}
 	}
 
-	pub fn set_depth_test(&self, function: Option<DepthFunction>)
-	{
-		if let Some(function) = function
-		{
+	pub fn set_depth_test(&self, function: Option<DepthFunction>) {
+		if let Some(function) = function {
 			unsafe {
 				al_set_render_state(ALLEGRO_DEPTH_TEST, 1);
 				al_set_render_state(ALLEGRO_DEPTH_FUNCTION, function as c_int);
 			}
-		}
-		else
-		{
+		} else {
 			unsafe {
 				al_set_render_state(ALLEGRO_DEPTH_TEST, 0);
 			}

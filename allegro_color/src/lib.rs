@@ -16,13 +16,11 @@ use allegro_color_sys::*;
 use libc::*;
 use std::ffi::{CStr, CString};
 
-pub trait ColorAddonExtensions
-{
+pub trait ColorAddonExtensions {
 	#[doc(hidden)]
 	fn get_color(&self) -> Color;
 
-	fn from_hsv(hue: f32, saturation: f32, value: f32) -> Color
-	{
+	fn from_hsv(hue: f32, saturation: f32, value: f32) -> Color {
 		let mut r: c_float = 0.0;
 		let mut g: c_float = 0.0;
 		let mut b: c_float = 0.0;
@@ -41,8 +39,7 @@ pub trait ColorAddonExtensions
 		Color::from_rgb_f(r as f32, g as f32, b as f32)
 	}
 
-	fn from_hsl(hue: f32, saturation: f32, lightness: f32) -> Color
-	{
+	fn from_hsl(hue: f32, saturation: f32, lightness: f32) -> Color {
 		let mut r: c_float = 0.0;
 		let mut g: c_float = 0.0;
 		let mut b: c_float = 0.0;
@@ -61,8 +58,7 @@ pub trait ColorAddonExtensions
 		Color::from_rgb_f(r as f32, g as f32, b as f32)
 	}
 
-	fn from_css_name(name: &str) -> Color
-	{
+	fn from_css_name(name: &str) -> Color {
 		let mut r: c_float = 0.0;
 		let mut g: c_float = 0.0;
 		let mut b: c_float = 0.0;
@@ -75,8 +71,7 @@ pub trait ColorAddonExtensions
 		Color::from_rgb_f(r as f32, g as f32, b as f32)
 	}
 
-	fn from_cmyk(cyan: f32, magenta: f32, yellow: f32, key: f32) -> Color
-	{
+	fn from_cmyk(cyan: f32, magenta: f32, yellow: f32, key: f32) -> Color {
 		let mut r: c_float = 0.0;
 		let mut g: c_float = 0.0;
 		let mut b: c_float = 0.0;
@@ -96,8 +91,7 @@ pub trait ColorAddonExtensions
 		Color::from_rgb_f(r as f32, g as f32, b as f32)
 	}
 
-	fn from_yuv(y: f32, u: f32, v: f32) -> Color
-	{
+	fn from_yuv(y: f32, u: f32, v: f32) -> Color {
 		let mut r: c_float = 0.0;
 		let mut g: c_float = 0.0;
 		let mut b: c_float = 0.0;
@@ -116,8 +110,7 @@ pub trait ColorAddonExtensions
 		Color::from_rgb_f(r as f32, g as f32, b as f32)
 	}
 
-	fn from_html_hex(html_hex: &str) -> Color
-	{
+	fn from_html_hex(html_hex: &str) -> Color {
 		let mut r: c_float = 0.0;
 		let mut g: c_float = 0.0;
 		let mut b: c_float = 0.0;
@@ -130,8 +123,7 @@ pub trait ColorAddonExtensions
 		Color::from_rgb_f(r as f32, g as f32, b as f32)
 	}
 
-	fn to_hsv(&self) -> (f32, f32, f32)
-	{
+	fn to_hsv(&self) -> (f32, f32, f32) {
 		let mut h: c_float = 0.0;
 		let mut s: c_float = 0.0;
 		let mut v: c_float = 0.0;
@@ -151,8 +143,7 @@ pub trait ColorAddonExtensions
 		(h as f32, s as f32, v as f32)
 	}
 
-	fn to_hsl(&self) -> (f32, f32, f32)
-	{
+	fn to_hsl(&self) -> (f32, f32, f32) {
 		let mut h: c_float = 0.0;
 		let mut s: c_float = 0.0;
 		let mut l: c_float = 0.0;
@@ -172,8 +163,7 @@ pub trait ColorAddonExtensions
 		(h as f32, s as f32, l as f32)
 	}
 
-	fn to_css_name(&self) -> String
-	{
+	fn to_css_name(&self) -> String {
 		let (r, g, b) = self.get_color().to_rgb_f();
 
 		unsafe {
@@ -182,8 +172,7 @@ pub trait ColorAddonExtensions
 		}
 	}
 
-	fn to_cmyk(&self) -> (f32, f32, f32, f32)
-	{
+	fn to_cmyk(&self) -> (f32, f32, f32, f32) {
 		let mut c: c_float = 0.0;
 		let mut m: c_float = 0.0;
 		let mut y: c_float = 0.0;
@@ -205,8 +194,7 @@ pub trait ColorAddonExtensions
 		(c as f32, y as f32, m as f32, k as f32)
 	}
 
-	fn to_yuv(&self) -> (f32, f32, f32)
-	{
+	fn to_yuv(&self) -> (f32, f32, f32) {
 		let mut y: c_float = 0.0;
 		let mut u: c_float = 0.0;
 		let mut v: c_float = 0.0;
@@ -227,15 +215,12 @@ pub trait ColorAddonExtensions
 	}
 }
 
-impl ColorAddonExtensions for Color
-{
-	fn get_color(&self) -> Color
-	{
+impl ColorAddonExtensions for Color {
+	fn get_color(&self) -> Color {
 		*self
 	}
 }
 
-pub fn get_color_addon_version() -> i32
-{
+pub fn get_color_addon_version() -> i32 {
 	unsafe { al_get_allegro_color_version() as i32 }
 }

@@ -28,27 +28,21 @@ flag_type! {
 	}
 }
 
-pub struct TtfAddon
-{
+pub struct TtfAddon {
 	_dummy: (),
 }
 
-impl TtfAddon
-{
-	pub fn init(_: &FontAddon) -> Result<TtfAddon, String>
-	{
+impl TtfAddon {
+	pub fn init(_: &FontAddon) -> Result<TtfAddon, String> {
 		use std::sync::Once;
 		static mut RUN_ONCE: Once = Once::new();
 
 		let mut res = Err("The TTF addon already initialized.".into());
 		unsafe {
 			RUN_ONCE.call_once(|| {
-				res = if al_init_ttf_addon() != 0
-				{
+				res = if al_init_ttf_addon() != 0 {
 					Ok(TtfAddon { _dummy: () })
-				}
-				else
-				{
+				} else {
 					Err("Could not initialize the TTF addon.".into())
 				}
 			})
@@ -56,13 +50,11 @@ impl TtfAddon
 		res
 	}
 
-	pub fn get_version() -> i32
-	{
+	pub fn get_version() -> i32 {
 		unsafe { al_get_allegro_ttf_version() as i32 }
 	}
 
-	pub fn load_ttf_font(&self, filename: &str, size: i32, flags: TtfFlags) -> Result<Font, ()>
-	{
+	pub fn load_ttf_font(&self, filename: &str, size: i32, flags: TtfFlags) -> Result<Font, ()> {
 		let filename = CString::new(filename.as_bytes()).unwrap();
 		unsafe {
 			Font::wrap_allegro_font(al_load_ttf_font(
@@ -75,14 +67,10 @@ impl TtfAddon
 
 	pub fn load_ttf_font_stretch(
 		&self, filename: &str, width: i32, height: i32, flags: TtfFlags,
-	) -> Result<Font, String>
-	{
-		if width < 0 && height >= 0 || width >= 0 && height < 0
-		{
+	) -> Result<Font, String> {
+		if width < 0 && height >= 0 || width >= 0 && height < 0 {
 			Err("Invalid dimension combination.".to_string())
-		}
-		else
-		{
+		} else {
 			let filename = CString::new(filename.as_bytes()).unwrap();
 			unsafe {
 				Font::wrap_allegro_font(al_load_ttf_font_stretch(
